@@ -1,0 +1,193 @@
+/*
+ * Lemma design system.
+ *
+ * Black and white, minimal, editorial. Colour is reserved for meaning:
+ * - three formula colours (variable, number, changed part),
+ * - two feedback colours (correct, wrong).
+ * Nothing else in the interface is coloured.
+ *
+ * Preferences are applied as attributes on <html>:
+ *   data-theme="dark|light", data-font="default|atkinson", data-size="m|l|xl"
+ */
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root,
+[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface-2: #1c1c1c;
+  --fg: #ededed;
+  --muted: #9a9a9a;
+  --border: #2a2a2a;
+  --border-strong: #3d3d3d;
+  --invert-bg: #ededed;
+  --invert-fg: #0a0a0a;
+
+  /* Formula colour coding: the only colours besides feedback. */
+  --c-var: #6cb6ff;
+  --c-num: #f0b35a;
+  --c-hl: #e879c6;
+
+  /* Feedback. */
+  --c-good: #4ade80;
+  --c-bad: #f87171;
+  --c-good-bg: rgb(74 222 128 / 0.1);
+  --c-bad-bg: rgb(248 113 113 / 0.1);
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #f7f7f7;
+  --surface-2: #efefef;
+  --fg: #111111;
+  --muted: #5f5f5f;
+  --border: #e3e3e3;
+  --border-strong: #c9c9c9;
+  --invert-bg: #111111;
+  --invert-fg: #ffffff;
+
+  --c-var: #0b63c5;
+  --c-num: #a35c00;
+  --c-hl: #b4228a;
+
+  --c-good: #15803d;
+  --c-bad: #b91c1c;
+  --c-good-bg: rgb(21 128 61 / 0.08);
+  --c-bad-bg: rgb(185 28 28 / 0.08);
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-invert-bg: var(--invert-bg);
+  --color-invert-fg: var(--invert-fg);
+  --color-var: var(--c-var);
+  --color-num: var(--c-num);
+  --color-hl: var(--c-hl);
+  --color-good: var(--c-good);
+  --color-bad: var(--c-bad);
+  --color-good-bg: var(--c-good-bg);
+  --color-bad-bg: var(--c-bad-bg);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Text size preference: everything is sized in rem, so this scales the app. */
+html {
+  font-size: 17px;
+}
+html[data-size="l"] {
+  font-size: 19px;
+}
+html[data-size="xl"] {
+  font-size: 22px;
+}
+
+html {
+  --font-ui: var(--font-geist-sans), system-ui, sans-serif;
+}
+html[data-font="atkinson"] {
+  --font-ui: var(--font-atkinson), system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  /* Generous line height and spacing help readers with dyslexia. */
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  word-spacing: 0.06em;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+/* Visible keyboard focus everywhere. */
+:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ---- Formula colour coding (see src/math/markup.ts) ---- */
+.katex {
+  font-size: 1.12em;
+}
+.katex .m-var {
+  color: var(--c-var);
+}
+.katex .m-num {
+  color: var(--c-num);
+}
+.katex .m-hl {
+  color: var(--c-hl);
+  /* Not only colour: an underline marks the change for colour-blind users. */
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.katex .m-hl .m-var,
+.katex .m-hl .m-num {
+  color: var(--c-hl);
+}
+
+/* ---- MathLive input ---- */
+math-field {
+  display: block;
+  width: 100%;
+  font-size: 1.5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--fg);
+  --caret-color: var(--fg);
+  --selection-background-color: var(--surface-2);
+  --contains-highlight-background-color: transparent;
+  --placeholder-color: var(--muted);
+  outline: none;
+}
+math-field:focus-within {
+  border-color: var(--fg);
+}
+math-field::part(virtual-keyboard-toggle),
+math-field::part(menu-toggle) {
+  color: var(--muted);
+}
+
+/* ---- Motion: short and calm, and off when the user asks for that ---- */
+@keyframes lemma-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-in {
+  animation: lemma-in 180ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
