@@ -63,6 +63,8 @@ npm run dev            # http://localhost:3000
 
 The database file is created and migrated automatically on first use.
 
+**Become admin**: register in the app, then run `npm run make-admin -- you@example.com` on the server and log in again. Admin rights are never granted through registration, because email addresses are not verified.
+
 ### Environment variables
 
 | Variable | Meaning |
@@ -70,7 +72,6 @@ The database file is created and migrated automatically on first use.
 | `BETTER_AUTH_SECRET` | Long random string for signing sessions. Generate one with `openssl rand -base64 32`. |
 | `BETTER_AUTH_URL` | Public URL of the app, e.g. `http://localhost:3000` or `https://lemma.example.nl`. |
 | `DATABASE_PATH` | Path to the SQLite file. Default: `./data/lemma.db`. |
-| `ADMIN_EMAILS` | Comma-separated emails that get the admin role when they register. |
 
 ## Scripts
 
@@ -95,7 +96,7 @@ Lemma is a single Node.js process with one SQLite file. No other services are ne
    git clone https://github.com/guuskaashoek/lemma.git ~/lemma
    cd ~/lemma
    npm ci
-   cp .env.example .env    # set BETTER_AUTH_SECRET, BETTER_AUTH_URL, ADMIN_EMAILS
+   cp .env.example .env    # set BETTER_AUTH_SECRET and BETTER_AUTH_URL
    npm run build
    npm start               # listens on port 3000 (use `npm start -- -p 8080` for another port)
    ```

@@ -22,7 +22,7 @@ import type { MessageKey } from "@/i18n/messages";
 import { checkAnswer, roundHalfAwayFromZero, type CheckResult, type Submission } from "@/math/check";
 import { evaluate, parse } from "@/math/cas";
 import { FigureView } from "./figures";
-import { IconCheck, IconCross, IconHint, IconPractice, IconRule } from "./icons";
+import { IconCheck, IconCross, IconHint, IconLock, IconPractice, IconRule } from "./icons";
 import { Formula, Inline, RichText } from "./math";
 import { MathInput } from "./math-input";
 import { SpeakButton } from "./speak-button";
@@ -163,6 +163,11 @@ export function ExerciseCard({
       <div className="text-xl">
         <RichText text={prompt} />
       </div>
+      {calcPolicy === "off" && (
+        <p className="flex items-center gap-2 text-sm text-muted">
+          <IconLock width={16} height={16} /> {calculatorOffReason ?? t("calcOff")}
+        </p>
+      )}
       {exercise.latex && (
         <div className="rounded-xl border border-border bg-surface px-6 py-5 text-center text-2xl">
           <Formula latex={exercise.latex} display />
