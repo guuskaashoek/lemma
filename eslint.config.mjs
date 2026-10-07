@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Worktrees created by multi-agent workflows.
     ".claude/**",
+    // Workflow scripts use the workflow runtime (top-level return/await).
+    "docs/workflows/**",
   ]),
 ]);
 

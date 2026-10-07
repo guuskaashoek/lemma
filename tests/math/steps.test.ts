@@ -51,3 +51,12 @@ describe("validateSteps", () => {
     expect(validateSteps(["3x-6=9", "3x=3"])).toMatchObject({ ok: false });
   });
 });
+
+describe("step checker speed", () => {
+  it("stays fast for equations without roots in the scan range", () => {
+    const t0 = performance.now();
+    validateSteps(["\\tan(A^{\\circ})=\\frac{5}{8}", "A^{\\circ}=\\tan^{-1}\\left(\\frac{5}{8}\\right)"]);
+    validateSteps(["e^{x}=1000", "x=\\ln(1000)"]);
+    expect(performance.now() - t0).toBeLessThan(5000);
+  });
+});

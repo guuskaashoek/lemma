@@ -61,7 +61,7 @@ function buildPrompt(u) {
   const id = String(u.n).padStart(2, '0')
   return `You are building Unit ${u.n} ("${u.title}") of Lemma, a Dutch/English Duolingo-style maths learning app (Next.js 16, TypeScript). You work in your own git worktree of the repository (your current working directory); other units are built in parallel in other worktrees, so stay strictly inside your own folder.
 
-BEFORE ANYTHING: make sure your branch contains the latest local main: run `git merge --no-edit main` in your worktree (your worktree may have been created from an older commit). If node_modules is missing, symlink it: ln -s ${REPO}/node_modules node_modules. Run `npx next typegen` once before the first typecheck.
+BEFORE ANYTHING: make sure your branch contains the latest local main: run "git merge --no-edit main" in your worktree (your worktree may have been created from an older commit). If node_modules is missing, symlink it: ln -s ${REPO}/node_modules node_modules. Run "npx next typegen" once before the first typecheck.
 
 FIRST read, completely: docs/CONTENT_GUIDE.md (the rules you must follow). Then study the reference implementation src/content/units/u02/ (lessons.ts, generators.ts, rules.ts, index.ts), plus src/content/units/u00/, src/content/types.ts, src/visuals/types.ts (and the widgets in src/visuals/widgets/ to see what they draw), src/math/check.ts (answer kinds and forms), src/math/steps.ts, tests/content/*.test.ts and tests/helpers/content.ts.
 
