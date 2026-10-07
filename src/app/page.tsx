@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LanguageSwitch } from "@/components/language-switch";
+import { Logo, LogoMark } from "@/components/logo";
 import { getT } from "@/i18n/server";
 import { getCurrentUser } from "@/lib/session";
 
@@ -13,9 +14,10 @@ export default async function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-16">
       <div className="mb-16 flex items-center justify-between">
-        <span className="text-xl font-semibold tracking-tight">Lemma</span>
+        <Logo size={26} />
         <LanguageSwitch />
       </div>
+      <LogoMark size={56} className="mb-8" />
       <h1 className="text-5xl leading-tight font-semibold tracking-tight">{t("tagline")}</h1>
       <ul className="mt-10 space-y-3 text-lg text-muted">
         {(["landingPoint1", "landingPoint2", "landingPoint3", "landingPoint4"] as const).map((k) => (

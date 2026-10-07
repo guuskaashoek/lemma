@@ -46,3 +46,6 @@ next-env.d.ts
 
 # copied from node_modules by scripts/copy-assets
 /public/mathlive
+
+# workflow worktrees
+/.claude/worktrees

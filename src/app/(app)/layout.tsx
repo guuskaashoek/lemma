@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/actions/auth";
 import { IconFlame } from "@/components/icons";
+import { Logo } from "@/components/logo";
 import { NavLinks } from "@/components/nav-links";
 import { getT } from "@/i18n/server";
 import { countDueSkills, getDailySummary } from "@/lib/progress";
@@ -21,8 +22,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-border bg-bg/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-6">
-          <Link href="/learn" className="text-lg font-semibold tracking-tight">
-            Lemma
+          <Link href="/learn" aria-label="Lemma">
+            <Logo />
           </Link>
           <NavLinks
             links={[
