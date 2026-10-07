@@ -17,7 +17,9 @@ export function stripMarkup(latex: string): string {
   let out = latex;
   // Repeat to handle nested macros such as \hl{\hl{x}}.
   for (let i = 0; i < 5; i++) {
-    const next = replaceMacro(replaceMacro(out, "\\hl", (inner) => inner), "\\ask", (inner) => inner);
+    // A leading space keeps a command before the macro intact:
+    // `\cdot\hl{b}` must become `\cdot b`, not `\cdotb`.
+    const next = replaceMacro(replaceMacro(out, "\\hl", (inner) => ` ${inner}`), "\\ask", (inner) => ` ${inner}`);
     if (next === out) break;
     out = next;
   }

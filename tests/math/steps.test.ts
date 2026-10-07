@@ -60,3 +60,9 @@ describe("step checker speed", () => {
     expect(performance.now() - t0).toBeLessThan(5000);
   });
 });
+
+describe("markup next to commands", () => {
+  it("keeps \\cdot apart from a highlighted letter", () => {
+    expect(validateSteps(["2\\cdot b+3\\cdot b", "5\\cdot\\hl{b}"])).toEqual({ ok: true });
+  });
+});
