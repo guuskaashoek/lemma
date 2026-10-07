@@ -164,9 +164,10 @@ math-field {
 math-field:focus-within {
   border-color: var(--fg);
 }
+/* Lemma has its own symbol bar, so MathLive's menu and keyboard buttons go. */
 math-field::part(virtual-keyboard-toggle),
 math-field::part(menu-toggle) {
-  color: var(--muted);
+  display: none;
 }
 
 /* ---- Motion: short and calm, and off when the user asks for that ---- */

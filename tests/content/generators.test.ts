@@ -18,7 +18,9 @@ import {
   finalStepMatches,
   locProblems,
   perfectSubmission,
+  guidedProblems,
   renderOrThrow,
+  visualProblems,
   workedSolutionProblems,
 } from "../helpers/content";
 
@@ -53,13 +55,19 @@ describe.each(GENERATORS.map((g) => [g.id, g] as const))("generator %s", (id, ge
       for (const m of ex.mistakes ?? []) {
         const mr = checkAnswer(
           ex.answer,
-          ex.answer.kind === "solutions" ? { kind: "solutions", latex: [m.latex] } : { kind: "expr", latex: m.latex },
+          ex.answer.kind === "solutions"
+            ? { kind: "solutions", latex: [m.latex] }
+            : ex.answer.kind === "relation"
+              ? { kind: "relation", latex: m.latex }
+              : { kind: "expr", latex: m.latex },
         );
         if (mr.correct) problems.push(`${where}: mistake "${m.id}" (${m.latex}) is accepted as correct`);
         problems.push(...locProblems(m.explain, `${where} mistake ${m.id}`));
       }
 
       problems.push(...workedSolutionProblems(ex.hints.solution, `${where} solution`));
+      problems.push(...guidedProblems(ex.hints.solution, `${where} solution`));
+      if (ex.visual) problems.push(...visualProblems(ex.visual, `${where} visual`, ex.latex));
       if (!finalStepMatches(ex.hints.solution, ex.answer)) problems.push(`${where}: last step is not the answer`);
 
       problems.push(...locProblems(ex.prompt, `${where} prompt`));

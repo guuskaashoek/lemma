@@ -40,4 +40,14 @@ describe("validateSteps", () => {
     expect(validateSteps(["-2x<6", "x>-3"])).toEqual({ ok: true });
     expect(validateSteps(["-2x<6", "x<-3"])).toMatchObject({ ok: false });
   });
+
+  it("checks rearranging formulas with two variables", () => {
+    expect(validateSteps(["y=2x+1", "y-1=2x", "x=\\frac{y-1}{2}"])).toEqual({ ok: true });
+    expect(validateSteps(["y=2x+1", "y=2x-1"])).toMatchObject({ ok: false });
+    expect(validateSteps(["y=2x+1", "x=\\frac{y+1}{2}"])).toMatchObject({ ok: false });
+  });
+
+  it("finds a wrong equation step even without known solutions", () => {
+    expect(validateSteps(["3x-6=9", "3x=3"])).toMatchObject({ ok: false });
+  });
 });

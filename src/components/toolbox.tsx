@@ -98,7 +98,7 @@ export function ToolboxProvider({ children }: { children: ReactNode }) {
     <ToolboxContext value={{ panel, toggle, setPolicy, policy }}>
       {children}
       <ToolboxButtons />
-      {panel === "calculator" && <CalculatorPanel onClose={() => setPanel(null)} />}
+      <CalculatorPanel open={panel === "calculator"} onClose={() => setPanel(null)} />
       {panel === "legend" && <LegendPanel onClose={() => setPanel(null)} />}
       {panel === "shortcuts" && <ShortcutsPanel onClose={() => setPanel(null)} />}
     </ToolboxContext>
@@ -164,29 +164,31 @@ const ERROR_KEY: Record<CalcError["code"], MessageKey> = {
   empty: "calcErrEmpty",
 };
 
-function CalculatorPanel({ onClose }: { onClose: () => void }) {
+/**
+ * The calculator lives in a fixed drawer on the right. Its size never
+ * changes (no jumping while you hover or type), and it stays mounted while
+ * hidden, so the sum, result and history survive closing it.
+ */
+function CalculatorPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, l, locale } = useT();
   const { policy } = useToolbox();
   const [input, setInput] = useState("");
   const [angle, setAngle] = useState<AngleMode>("deg");
   const [result, setResult] = useState<{ text: string; error?: boolean } | null>(null);
   const [history, setHistory] = useState<Array<{ input: string; output: string; value: number }>>([]);
+  // Button explanations are off by default, so nothing pops up while calculating.
   const [explainMode, setExplainMode] = useState(false);
   const [explained, setExplained] = useState<CalcButton | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => inputRef.current?.focus(), []);
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
 
-  if (!policy.allowed) {
-    return (
-      <PanelShell title={t("calculator")} onClose={onClose}>
-        <div className="flex items-start gap-3 rounded-lg border border-border p-4">
-          <IconLock className="mt-1 shrink-0" />
-          <p>{policy.reason ?? t("calcOff")}</p>
-        </div>
-      </PanelShell>
-    );
-  }
+  const toggleExplain = (on: boolean) => {
+    setExplainMode(on);
+    setExplained(null);
+  };
 
   const ans = history[0]?.value;
   const compute = () => {
@@ -201,10 +203,7 @@ function CalculatorPanel({ onClose }: { onClose: () => void }) {
   };
 
   const press = (b: CalcButton) => {
-    if (explainMode) {
-      setExplained(b);
-      return;
-    }
+    if (explainMode) setExplained(b);
     if (b.action === "equals") compute();
     else if (b.action === "clear") {
       setInput("");
@@ -215,97 +214,122 @@ function CalculatorPanel({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <PanelShell title={t("calculator")} onClose={onClose} wide>
-      <div className="mb-3 flex items-center gap-2" role="radiogroup" aria-label={t("calcDeg")}>
-        {(["deg", "rad"] as const).map((m) => (
-          <button
-            key={m}
-            role="radio"
-            aria-checked={angle === m}
-            onClick={() => setAngle(m)}
-            className={`rounded-md border px-3 py-1 text-sm font-semibold ${angle === m ? "border-fg bg-invert-bg text-invert-fg" : "border-border text-muted"}`}
-          >
-            {m === "deg" ? `DEG · ${t("calcDeg")}` : `RAD · ${t("calcRad")}`}
-          </button>
-        ))}
-      </div>
-      <p className="mb-3 text-sm text-muted">{t("calcAngleNote")}</p>
-
-      <input
-        ref={inputRef}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            compute();
-          }
-        }}
-        className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 font-mono text-xl"
-        aria-label={t("calculator")}
-        spellCheck={false}
-        autoComplete="off"
-      />
-      <div className="mt-2 min-h-9 text-right font-mono text-2xl" aria-live="polite">
-        {result && <span className={result.error ? "text-base text-bad" : ""}>{result.error ? result.text : `= ${result.text}`}</span>}
+    <aside
+      role="dialog"
+      aria-label={t("calculator")}
+      hidden={!open}
+      className="fixed top-4 right-4 bottom-20 z-40 flex w-[26rem] flex-col rounded-xl border border-border-strong bg-bg p-5 shadow-2xl"
+    >
+      <div className="mb-3 flex shrink-0 items-center justify-between">
+        <h2 className="text-lg font-semibold">{t("calculator")}</h2>
+        <button onClick={onClose} aria-label={t("close")} className="rounded-md p-1 text-muted hover:text-fg">
+          <IconCross />
+        </button>
       </div>
 
-      <div className="mt-2 grid grid-cols-6 gap-1.5">
-        {CALC_BUTTONS.flat().map((b) => (
-          <button
-            key={b.label}
-            onClick={() => press(b)}
-            onMouseEnter={() => setExplained(b)}
-            onFocus={() => setExplained(b)}
-            className={`h-11 rounded-md border text-base ${
-              b.action === "equals"
-                ? "border-fg bg-invert-bg font-semibold text-invert-fg"
-                : b.kind === "digit"
-                  ? "border-border bg-surface-2"
-                  : "border-border bg-surface"
-            } hover:border-border-strong`}
-            title={l(b.what)}
-          >
-            {b.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-3 rounded-lg border border-border p-3 text-sm">
-        <label className="mb-1 flex items-center gap-2 text-muted">
-          <input type="checkbox" checked={explainMode} onChange={(e) => setExplainMode(e.target.checked)} />
-          {t("calcExplain")}
-        </label>
-        {explained ? (
-          <div className="space-y-1">
-            <p>
-              <strong className="font-mono">{explained.label}</strong> · {l(explained.what)}
-            </p>
-            <p className="text-muted">{l(explained.when)}</p>
-            {explained.example && <p className="font-mono">{explained.example}</p>}
-          </div>
-        ) : (
-          <p className="text-muted">{t("calcExplainHint")}</p>
-        )}
-      </div>
-
-      <details className="mt-3">
-        <summary className="cursor-pointer text-sm text-muted">{t("calcHistory")}</summary>
-        {history.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">{t("calcHistoryEmpty")}</p>
-        ) : (
-          <ul className="mt-2 space-y-1 font-mono text-sm">
-            {history.map((h, i) => (
-              <li key={i}>
-                <button className="w-full text-left hover:underline" onClick={() => setInput(h.input)}>
-                  {h.input} = {h.output}
-                </button>
-              </li>
+      {!policy.allowed ? (
+        <div className="flex items-start gap-3 rounded-lg border border-border p-4">
+          <IconLock className="mt-1 shrink-0" />
+          <p>{policy.reason ?? t("calcOff")}</p>
+        </div>
+      ) : (
+        <>
+          <div className="mb-3 flex shrink-0 items-center gap-2" role="radiogroup" aria-label={t("calcDeg")}>
+            {(["deg", "rad"] as const).map((m) => (
+              <button
+                key={m}
+                role="radio"
+                aria-checked={angle === m}
+                onClick={() => setAngle(m)}
+                className={`rounded-md border px-3 py-1 text-sm font-semibold ${angle === m ? "border-fg bg-invert-bg text-invert-fg" : "border-border text-muted"}`}
+              >
+                {m === "deg" ? `DEG · ${t("calcDeg")}` : `RAD · ${t("calcRad")}`}
+              </button>
             ))}
-          </ul>
-        )}
-      </details>
-    </PanelShell>
+          </div>
+
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                compute();
+              }
+            }}
+            className="w-full shrink-0 rounded-lg border border-border-strong bg-surface px-3 py-2 font-mono text-xl"
+            aria-label={t("calculator")}
+            spellCheck={false}
+            autoComplete="off"
+          />
+          {/* Fixed height, so a result or error never pushes the buttons down. */}
+          <div className="mt-1 flex h-10 shrink-0 items-center justify-end overflow-hidden font-mono text-2xl" aria-live="polite">
+            {result && (
+              <span className={`truncate ${result.error ? "text-sm text-bad" : ""}`}>{result.error ? result.text : `= ${result.text}`}</span>
+            )}
+          </div>
+
+          <div className="grid shrink-0 grid-cols-6 gap-1.5">
+            {CALC_BUTTONS.flat().map((b) => (
+              <button
+                key={b.label}
+                onClick={() => press(b)}
+                onMouseEnter={explainMode ? () => setExplained(b) : undefined}
+                className={`h-11 rounded-md border text-base ${
+                  b.action === "equals"
+                    ? "border-fg bg-invert-bg font-semibold text-invert-fg"
+                    : b.kind === "digit"
+                      ? "border-border bg-surface-2"
+                      : "border-border bg-surface"
+                } hover:border-border-strong`}
+                aria-label={l(b.what)}
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
+
+          <label className="mt-3 flex shrink-0 items-center gap-2 text-sm text-muted">
+            <input type="checkbox" checked={explainMode} onChange={(e) => toggleExplain(e.target.checked)} />
+            {t("calcExplain")}
+          </label>
+          {explainMode && (
+            // Fixed height: hovering over buttons never changes the layout.
+            <div className="mt-2 h-28 shrink-0 overflow-y-auto rounded-lg border border-border p-3 text-sm">
+              {explained ? (
+                <div className="space-y-1">
+                  <p>
+                    <strong className="font-mono">{explained.label}</strong> · {l(explained.what)}
+                  </p>
+                  <p className="text-muted">{l(explained.when)}</p>
+                  {explained.example && <p className="font-mono">{explained.example}</p>}
+                </div>
+              ) : (
+                <p className="text-muted">{t("calcExplainHint")}</p>
+              )}
+            </div>
+          )}
+
+          <div className="mt-3 min-h-0 flex-1 overflow-y-auto border-t border-border pt-3">
+            <p className="mb-1 text-sm text-muted">{t("calcHistory")}</p>
+            {history.length === 0 ? (
+              <p className="text-sm text-muted">{t("calcHistoryEmpty")}</p>
+            ) : (
+              <ul className="space-y-1 font-mono text-sm">
+                {history.map((h, i) => (
+                  <li key={i}>
+                    <button className="w-full truncate text-left hover:underline" onClick={() => setInput(h.input)}>
+                      {h.input} = {h.output}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
+    </aside>
   );
 }
 

@@ -57,6 +57,12 @@ describe("roadmap", () => {
     expect(r[1].lessons[0].state).toBe("next");
   });
 
+  it("does not let a planned unit block later units", () => {
+    const withGap = [unit(0, ["a"]), unit(1, [], "planned"), unit(2, ["c"])];
+    const r = buildRoadmap(withGap, new Set(["a"]), new Map([["u0", row("u0", { finalPassedAt: new Date() })]]));
+    expect(r.map((u) => u.state)).toEqual(["passed", "planned", "available"]);
+  });
+
   it("unlocks the next unit after testing out", () => {
     const r = buildRoadmap(units, new Set(), new Map([["u0", row("u0", { testedOutAt: new Date() })]]));
     expect(r[0].state).toBe("skipped");

@@ -4,7 +4,7 @@
 import { evaluate as calc } from "@/calculator/engine";
 import { evaluate, parse } from "@/math/cas";
 import { roundHalfAwayFromZero } from "@/math/check";
-import type { Generator, Loc, Step } from "../types";
+import type { Generator, Loc, Step } from "@/content/types";
 
 type Ratio = "sin" | "cos" | "tan";
 type Side = "opposite" | "adjacent" | "hypotenuse";
@@ -33,8 +33,8 @@ const MNEMONIC_PART: Record<Ratio, Loc> = {
 };
 
 export const sohCahToaSide: Generator = {
-  id: "trig.sohcahtoa-side",
-  skillId: "sos-cas-toa",
+  id: "u0.sohcahtoa-side",
+  skillId: "u0.sos-cas-toa",
   title: { nl: "Zijde berekenen met SOS CAS TOA", en: "Finding a side with SOH CAH TOA" },
   generate(rng, difficulty) {
     const c = difficulty === 1 ? CASES[rng.int(0, 1)] : difficulty === 2 ? CASES[2] : CASES[3];
@@ -85,7 +85,7 @@ export const sohCahToaSide: Generator = {
           nl: `Welke zijden doen mee? Gegeven: de ${SIDE_NAME[c.given].nl}. Gevraagd: de ${SIDE_NAME[c.asked].nl}.`,
           en: `Which sides are involved? Given: the ${SIDE_NAME[c.given].en}. Asked: the ${SIDE_NAME[c.asked].en}.`,
         },
-        rule: { text: MNEMONIC_PART[c.ratio], ruleId: "sos-cas-toa", mnemonic: "soscastoa" },
+        rule: { text: MNEMONIC_PART[c.ratio], ruleId: "u0.sos-cas-toa", mnemonic: "soscastoa" },
         solution: { steps, solutions: [{ x: value }] },
       },
       mistakes: [

@@ -1,20 +1,12 @@
 /**
- * Registry of all exercise generators, and the helper that turns a generator
- * plus a seed into a concrete exercise.
+ * Registry of all exercise generators (collected from the unit bundles), and
+ * the helper that turns a generator plus a seed into a concrete exercise.
  */
 import { createRng } from "@/math/random";
 import type { Difficulty, Exercise, Generator } from "../types";
-import { addFractions, orderOfOperations } from "./arithmetic";
-import { commonFactor, linearEquation } from "./algebra";
-import { sohCahToaSide } from "./trig";
+import { BUNDLES } from "../units";
 
-export const GENERATORS: Generator[] = [
-  orderOfOperations,
-  addFractions,
-  linearEquation,
-  commonFactor,
-  sohCahToaSide,
-];
+export const GENERATORS: Generator[] = BUNDLES.flatMap((b) => b.generators);
 
 const byId = new Map(GENERATORS.map((g) => [g.id, g]));
 

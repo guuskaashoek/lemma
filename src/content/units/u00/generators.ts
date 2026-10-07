@@ -5,8 +5,8 @@ import Fraction from "fraction.js";
 import { equivalent, evaluate, parse } from "@/math/cas";
 import { frac, gcd } from "@/math/latex";
 import type { Rng } from "@/math/random";
-import type { Difficulty, Generator, Step } from "../types";
-import { bin, evalTree, leftToRight, num, paren, pow, reduceSteps, toLatex, type ArithNode } from "./arith-tree";
+import type { Difficulty, Generator, Step } from "@/content/types";
+import { bin, evalTree, leftToRight, num, paren, pow, reduceSteps, toLatex, type ArithNode } from "@/content/shared/arith-tree";
 
 // ---------------------------------------------------------------------------
 // Order of operations (rekenvolgorde)
@@ -68,8 +68,8 @@ const STEP_NOTES = {
 };
 
 export const orderOfOperations: Generator = {
-  id: "arith.order-of-operations",
-  skillId: "order-of-operations",
+  id: "u0.order-of-operations",
+  skillId: "u0.order-of-operations",
   title: { nl: "Rekenvolgorde", en: "Order of operations" },
   generate(rng, difficulty) {
     const tree = orderOfOpsTree(rng, difficulty);
@@ -98,7 +98,7 @@ export const orderOfOperations: Generator = {
             nl: "Rekenvolgorde: Haakjes, Machten en Wortels, Vermenigvuldigen en Delen, Optellen en Aftrekken.",
             en: "Order of operations: Brackets, Powers and roots, Multiply and divide, Add and subtract.",
           },
-          ruleId: "order-of-operations",
+          ruleId: "u0.order-of-operations",
           mnemonic: "hmwvdoa",
         },
         solution: { steps },
@@ -113,7 +113,7 @@ export const orderOfOperations: Generator = {
                   nl: "Je rekende alles van links naar rechts. Keer en gedeeld door gaan vóór plus en min.",
                   en: "You worked strictly from left to right. Multiply and divide come before add and subtract.",
                 },
-                relatedSkill: "order-of-operations",
+                relatedSkill: "u0.order-of-operations",
               },
             ]
           : [],
@@ -137,8 +137,8 @@ export const orderOfOperations: Generator = {
 const lcm = (a: number, b: number) => (a * b) / gcd(a, b);
 
 export const addFractions: Generator = {
-  id: "arith.add-fractions",
-  skillId: "fractions-add",
+  id: "u0.add-fractions",
+  skillId: "u0.add-fractions",
   title: { nl: "Breuken optellen", en: "Adding fractions" },
   generate(rng, difficulty) {
     // Each fraction is in lowest terms, so the exercise itself looks tidy.
@@ -215,7 +215,7 @@ export const addFractions: Generator = {
             nl: "Breuken optellen: maak de noemers gelijk en tel dan alleen de tellers op.",
             en: "Adding fractions: make the denominators equal, then add only the numerators.",
           },
-          ruleId: "fractions-add",
+          ruleId: "u0.add-fractions",
         },
         solution: { steps },
       },
@@ -229,7 +229,7 @@ export const addFractions: Generator = {
                 nl: "Je telde ook de noemers bij elkaar op. De noemer blijft gelijk; alleen de tellers tel je op.",
                 en: "You also added the denominators. The denominator stays the same; you only add the numerators.",
               },
-              relatedSkill: "fractions-add",
+              relatedSkill: "u0.add-fractions",
             },
           ],
     };

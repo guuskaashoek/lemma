@@ -10,13 +10,14 @@
 
 /**
  * Removes our own markup macros so the expression can be parsed.
- * `\hl{3x}` (highlighted, see `markup.ts`) becomes `3x`.
+ * `\hl{3x}` (highlighted, see `markup.ts`) becomes `3x`, and so does
+ * `\ask{3x}` (a blank the learner fills in during guided solving).
  */
 export function stripMarkup(latex: string): string {
   let out = latex;
   // Repeat to handle nested macros such as \hl{\hl{x}}.
   for (let i = 0; i < 5; i++) {
-    const next = replaceMacro(out, "\\hl", (inner) => inner);
+    const next = replaceMacro(replaceMacro(out, "\\hl", (inner) => inner), "\\ask", (inner) => inner);
     if (next === out) break;
     out = next;
   }
