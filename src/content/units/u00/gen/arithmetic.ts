@@ -164,13 +164,24 @@ function orderOfOpsTree(rng: Rng, difficulty: Difficulty): ArithNode {
   const templates: Record<Difficulty, Array<() => ArithNode>> = {
     1: [
       () => bin("+", n(1, 20), bin("*", n(2, 9), n(2, 9))), // a + b·c
-      () => bin("-", bin("*", n(2, 9), n(2, 9)), n(1, 9)), // a·b − c
+      () => {
+        // a·b − c, with c at most a·b.
+        const a = rng.int(2, 9);
+        const b = rng.int(2, 9);
+        return bin("-", bin("*", num(a), num(b)), n(1, Math.min(9, a * b)));
+      },
       () => bin("+", n(1, 20), division()), // a + b:c
       () => bin("-", n(20, 40), bin("*", n(2, 5), n(2, 4))), // a − b·c (stays positive)
     ],
     2: [
       () => bin("*", paren(bin("+", n(1, 9), n(1, 9))), n(2, 6)), // (a + b)·c
-      () => bin("-", bin("+", n(1, 20), bin("*", n(2, 9), n(2, 9))), n(1, 9)), // a + b·c − d
+      () => {
+        // a + b·c − d, never below zero.
+        const a = rng.int(1, 20);
+        const b = rng.int(2, 9);
+        const c = rng.int(2, 9);
+        return bin("-", bin("+", num(a), bin("*", num(b), num(c))), n(1, Math.min(9, a + b * c)));
+      },
       () => {
         // a·b : c, evaluated left to right; a is a multiple of c.
         const c = rng.int(2, 6);
@@ -187,8 +198,18 @@ function orderOfOpsTree(rng: Rng, difficulty: Difficulty): ArithNode {
         const b = rng.int(1, 9);
         return bin(":", pow(paren(bin("-", num(b + diff), num(b))), 2), num(c));
       },
-      () => bin("-", n(1, 12), bin("*", n(2, 5), paren(bin("+", n(1, 6), n(1, 6))))), // a − b·(c + d), may be negative
-      () => bin("-", pow(n(2, 3), 3), bin(":", bin("*", n(2, 9), num(4)), num(2))), // a³ − b·4:2
+      () => {
+        // a − b·(c + d). Negative numbers come in unit 1, so a is big enough.
+        const b = rng.int(2, 5);
+        const c = rng.int(1, 6);
+        const d = rng.int(1, 6);
+        return bin("-", num(b * (c + d) + rng.int(1, 12)), bin("*", num(b), paren(bin("+", num(c), num(d)))));
+      },
+      () => {
+        // a³ − b·4:2, never below zero.
+        const a = rng.int(2, 3);
+        return bin("-", pow(num(a), 3), bin(":", bin("*", n(2, a === 2 ? 4 : 9), num(4)), num(2)));
+      },
     ],
   };
   return rng.pick(templates[difficulty])();
@@ -320,6 +341,7 @@ export const orderOfOperations: Generator = {
   isNice(ex) {
     if (ex.answer.kind !== "expr") return false;
     const v = evaluate(parse(ex.answer.latex));
-    return v !== null && Number.isInteger(v) && Math.abs(v) <= 200;
+    // Whole, small and not negative: negative numbers come in unit 1.
+    return v !== null && Number.isInteger(v) && v >= 0 && v <= 200;
   },
 };

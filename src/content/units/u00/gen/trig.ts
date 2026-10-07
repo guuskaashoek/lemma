@@ -85,7 +85,8 @@ export const sohCahToaChoose: Generator = {
       ),
       latex: `\\alpha=${angle}^{\\circ}`,
       figure: { kind: "right-triangle", angleDeg: angle, angleLabel: `${angle}^{\\circ}`, labels: { [given]: value, [asked]: "x" } },
-      visual: { kind: "right-triangle", angle, show: [ratio], interactive: true },
+      // All three ratios: showing only the right one would give the answer away.
+      visual: { kind: "right-triangle", angle, show: ["sin", "cos", "tan"], interactive: true },
       answer: {
         kind: "choice",
         options: options.map((o) => ({ latex: `\\${o}` })),
@@ -202,7 +203,8 @@ export const sohCahToaSide: Generator = {
     return {
       prompt: L(`Bereken $x$ (de ${SIDE_NAME[c.asked].nl}). Rond af op $1$ decimaal.`, `Find $x$ (the ${SIDE_NAME[c.asked].en}). Round to $1$ decimal.`),
       figure: { kind: "right-triangle", angleDeg: angle, angleLabel: `${angle}^{\\circ}`, labels },
-      visual: { kind: "right-triangle", angle, show: [ratio], interactive: true },
+      // All three ratios, so choosing SOS, CAS or TOA stays the learner's job.
+      visual: { kind: "right-triangle", angle, show: ["sin", "cos", "tan"], interactive: true },
       answer: { kind: "expr", latex: exact, form: "decimal", decimals: 1 },
       calculator: "allowed",
       hints: {
@@ -303,13 +305,15 @@ export const sohCahToaAngle: Generator = {
     return {
       prompt: L(`Bereken hoek $A$ in graden. Rond af op $1$ decimaal.`, `Work out angle $A$ in degrees. Round to $1$ decimal.`),
       figure: { kind: "right-triangle", angleDeg: Math.round(deg), angleLabel: "A", labels: { [topSide]: dec(t), [bottomSide]: dec(b) } },
-      visual: { kind: "right-triangle", angle: Math.round(deg), show: [ratio], interactive: true },
+      // Starts at 45°, not at the answer: the learner turns the angle until
+      // the ratio matches. All three ratios, so the choice is not given away.
+      visual: { kind: "right-triangle", angle: 45, show: ["sin", "cos", "tan"], interactive: true },
       answer: { kind: "solutions", variable: "A", values: [exactValue], form: "decimal", decimals: 1 },
       calculator: "allowed",
       hints: {
         nudge: L(
-          `Bekend: de ${SIDE_NAME[topSide].nl} ($${dec(t)}$) en de ${SIDE_NAME[bottomSide].nl} ($${dec(b)}$). Welk woord van SOS CAS TOA hoort daarbij? Reken dan terug met ${ratio}⁻¹.`,
-          `Known: the ${SIDE_NAME[topSide].en} ($${dec(t)}$) and the ${SIDE_NAME[bottomSide].en} ($${dec(b)}$). Which part of SOH CAH TOA goes with that? Then work back with ${ratio}⁻¹.`,
+          `Bekend: de ${SIDE_NAME[topSide].nl} ($${dec(t)}$) en de ${SIDE_NAME[bottomSide].nl} ($${dec(b)}$). Welk woord van SOS CAS TOA hoort daarbij? Reken dan terug met shift en die knop.`,
+          `Known: the ${SIDE_NAME[topSide].en} ($${dec(t)}$) and the ${SIDE_NAME[bottomSide].en} ($${dec(b)}$). Which part of SOH CAH TOA goes with that? Then work back with shift and that button.`,
         ),
         rule: {
           text: L(

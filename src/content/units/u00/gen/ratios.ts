@@ -178,14 +178,22 @@ export const ratioTable: Generator = {
       });
     }
     const flipped = b.mul(a).div(c);
-    if (!flipped.equals(answer) && !flipped.equals(added)) {
+    // Only as a whole number or with cents: that is what a learner would type.
+    const typeable = flipped.mul(100).equals(flipped.mul(100).floor());
+    if (typeable && !flipped.equals(answer) && !flipped.equals(added)) {
       mistakes.push({
         id: "flipped",
         latex: dec(flipped),
-        explain: L(
-          `Meer ${ctx.top.nl} geeft ook meer ${ctx.bottom.nl}. Je antwoord moet dus ${c > a ? "groter" : "kleiner"} zijn dan $${B}$.`,
-          `More ${ctx.top.en} also gives more ${ctx.bottom.en}. So your answer must be ${c > a ? "bigger" : "smaller"} than $${B}$.`,
-        ),
+        explain:
+          c > a
+            ? L(
+                `Meer ${ctx.top.nl} geeft ook meer ${ctx.bottom.nl}. Je antwoord moet dus groter zijn dan $${B}$.`,
+                `More ${ctx.top.en} also gives more ${ctx.bottom.en}. So your answer must be bigger than $${B}$.`,
+              )
+            : L(
+                `Minder ${ctx.top.nl} geeft ook minder ${ctx.bottom.nl}. Je antwoord moet dus kleiner zijn dan $${B}$.`,
+                `Fewer ${ctx.top.en} also gives fewer ${ctx.bottom.en}. So your answer must be smaller than $${B}$.`,
+              ),
       });
     }
 
@@ -238,6 +246,8 @@ type ShareContext = {
   unit: string;
   /** Size of one "group" is a multiple of this. */
   step: number;
+  /** The first part is the smaller one (less syrup than water). */
+  smallFirst?: boolean;
   question: (n: [string, string], p: number, q: number, total: string, ask: string) => Loc;
   given: (n: [string, string], p: number, q: number, has: string, amount: string, ask: string) => Loc;
 };
@@ -271,32 +281,33 @@ const SHARES: ShareContext[] = [
   },
   {
     names: () => [L("siroop", "syrup"), L("water", "water")],
-    unit: "ml",
+    unit: "mL",
     step: 10,
+    smallFirst: true,
     question: (n, p, q, total, ask) =>
       L(
-        `Je mengt siroop en water in de verhouding $${p}:${q}$. Je maakt $${total}$ ml limonade. Hoeveel ml ${ask} gebruik je?`,
-        `You mix syrup and water in the ratio $${p}:${q}$. You make $${total}$ ml of lemonade. How many ml of ${ask} do you use?`,
+        `Je mengt siroop en water in de verhouding $${p}:${q}$. Je maakt $${total}$ mL limonade. Hoeveel mL ${ask} gebruik je?`,
+        `You mix syrup and water in the ratio $${p}:${q}$. You make $${total}$ mL of lemonade. How many mL of ${ask} do you use?`,
       ),
     given: (n, p, q, has, amount, ask) =>
       L(
-        `Je mengt siroop en water in de verhouding $${p}:${q}$. Je gebruikt $${amount}$ ml ${has}. Hoeveel ml ${ask} heb je nodig?`,
-        `You mix syrup and water in the ratio $${p}:${q}$. You use $${amount}$ ml of ${has}. How many ml of ${ask} do you need?`,
+        `Je mengt siroop en water in de verhouding $${p}:${q}$. Je gebruikt $${amount}$ mL ${has}. Hoeveel mL ${ask} heb je nodig?`,
+        `You mix syrup and water in the ratio $${p}:${q}$. You use $${amount}$ mL of ${has}. How many mL of ${ask} do you need?`,
       ),
   },
   {
     names: () => [L("blauwe verf", "blue paint"), L("gele verf", "yellow paint")],
-    unit: "dl",
+    unit: "dL",
     step: 1,
     question: (n, p, q, total, ask) =>
       L(
-        `Groene verf maak je van blauwe en gele verf in de verhouding $${p}:${q}$. Je maakt $${total}$ dl groen. Hoeveel dl ${ask} gebruik je?`,
-        `You make green paint from blue and yellow paint in the ratio $${p}:${q}$. You make $${total}$ dl of green. How many dl of ${ask} do you use?`,
+        `Groene verf maak je van blauwe en gele verf in de verhouding $${p}:${q}$. Je maakt $${total}$ dL groen. Hoeveel dL ${ask} gebruik je?`,
+        `You make green paint from blue and yellow paint in the ratio $${p}:${q}$. You make $${total}$ dL of green. How many dL of ${ask} do you use?`,
       ),
     given: (n, p, q, has, amount, ask) =>
       L(
-        `Groene verf maak je van blauwe en gele verf in de verhouding $${p}:${q}$. Je hebt $${amount}$ dl ${has}. Hoeveel dl ${ask} heb je nodig?`,
-        `You make green paint from blue and yellow paint in the ratio $${p}:${q}$. You have $${amount}$ dl of ${has}. How many dl of ${ask} do you need?`,
+        `Groene verf maak je van blauwe en gele verf in de verhouding $${p}:${q}$. Je hebt $${amount}$ dL ${has}. Hoeveel dL ${ask} heb je nodig?`,
+        `You make green paint from blue and yellow paint in the ratio $${p}:${q}$. You have $${amount}$ dL of ${has}. How many dL of ${ask} do you need?`,
       ),
   },
 ];
@@ -312,7 +323,7 @@ export const ratioShare: Generator = {
     do {
       p = difficulty === 1 ? 1 : rng.int(difficulty === 3 ? 2 : 1, 5);
       q = rng.int(2, difficulty === 1 ? 4 : 6);
-    } while (p === q || gcd(p, q) !== 1);
+    } while (p === q || gcd(p, q) !== 1 || (ctx.smallFirst && p > q));
     const k = rng.int(2, difficulty === 1 ? 20 : 12) * ctx.step; // one group
     const parts = [p, q];
     const total = (p + q) * k;
@@ -336,8 +347,13 @@ export const ratioShare: Generator = {
       steps = [
         { latex: `\\frac{${total}}{${p}+${q}}\\cdot ${parts[ask]}`, note: L("Tel de delen op. Verdeel het totaal in zoveel groepjes.", "Add the parts. Share the total into that many groups.") },
         { latex: `\\frac{${total}}{\\ask{${p + q}}}\\cdot ${parts[ask]}`, note: L(`$${p}+${q}$ delen samen.`, `$${p}+${q}$ parts together.`) },
-        { latex: `\\ask{${k}}\\cdot ${parts[ask]}`, note: L("Eén groepje.", "One group.") },
-        { latex: `\\ask{${answer}}`, note: L(`Je zoekt $${parts[ask]}$ ${groupsWord(parts[ask]).nl}.`, `You want $${parts[ask]}$ ${groupsWord(parts[ask]).en}.`) },
+        // One group is the answer when the asked part is 1: no extra "times 1" step.
+        ...(parts[ask] === 1
+          ? [{ latex: `\\ask{${k}}`, note: L(`Eén groepje. Je zoekt precies $1$ groepje.`, `One group. You want exactly $1$ group.`) }]
+          : [
+              { latex: `\\ask{${k}}\\cdot ${parts[ask]}`, note: L("Eén groepje.", "One group.") },
+              { latex: `\\ask{${answer}}`, note: L(`Je zoekt $${parts[ask]}$ ${groupsWord(parts[ask]).nl}.`, `You want $${parts[ask]}$ ${groupsWord(parts[ask]).en}.`) },
+            ]),
       ];
       nudge = L(
         `De verhouding $${p}:${q}$ betekent: $${p}+${q}=${p + q}$ gelijke groepjes. Hoeveel is één groepje van $${total}$?`,

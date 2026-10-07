@@ -71,8 +71,8 @@ export const formulasLesson: Lesson = {
       kind: "explain",
       title: L("Invullen: de regels", "Filling in: the rules"),
       body: L(
-        "Vervang elke letter door zijn getal.\nEen getal vlak voor een letter betekent keer: $2a=2\\cdot a$.\nNegatief getal? Zet het tussen haakjes: $1.8\\cdot(-10)$.\nReken dan uit met de rekenvolgorde.\nZie [[rule:u0.substitute]].",
-        "Replace every letter by its number.\nA number right before a letter means times: $2a=2\\cdot a$.\nNegative number? Put it in brackets: $1.8\\cdot(-10)$.\nThen work it out with the order of operations.\nSee [[rule:u0.substitute]].",
+        "Vervang elke letter door zijn getal.\nEen getal vlak voor een letter betekent keer: $2a=2\\cdot a$.\nStaan er haakjes in de formule? Die blijven staan: $2(l+b)=2\\cdot(l+b)$.\nReken dan uit met de rekenvolgorde.\nZie [[rule:u0.substitute]].",
+        "Replace every letter by its number.\nA number right before a letter means times: $2a=2\\cdot a$.\nAre there brackets in the formula? They stay: $2(l+b)=2\\cdot(l+b)$.\nThen work it out with the order of operations.\nSee [[rule:u0.substitute]].",
       ),
       ruleId: "u0.substitute",
     },

@@ -33,11 +33,16 @@ export const trigLesson: Lesson = {
   },
   screens: [
     {
-      kind: "explain",
+      kind: "visual",
       title: L("Zijden vanuit de hoek", "Sides seen from the angle"),
       body: L(
         "Kijk vanuit de hoek die je kent (niet de rechte hoek).\n**Overstaand**: de zijde tegenover die hoek.\n**Aanliggend**: de zijde die tegen de hoek aan ligt.\n**Schuin**: de langste zijde, tegenover de rechte hoek.",
         "Look from the angle you know (not the right angle).\n**Opposite**: the side across from that angle.\n**Adjacent**: the side that touches the angle.\n**Hypotenuse**: the longest side, across from the right angle.",
+      ),
+      visual: { kind: "right-triangle", angle: 35, show: [], interactive: true },
+      task: L(
+        "Zoek de hoek met de boog. Welke zijde ligt er tegenover? Welke zijde raakt hem?",
+        "Find the angle with the arc. Which side is across from it? Which side touches it?",
       ),
     },
     {
@@ -75,6 +80,29 @@ export const trigLesson: Lesson = {
           { latex: "x\\approx \\ask{6.9}", note: L("Met de rekenmachine op graden.", "With the calculator in degrees."), approx: { decimals: 1 } },
         ],
         solutions: [{ x: 12 * Math.sin((35 * Math.PI) / 180) }],
+      },
+    },
+    {
+      kind: "example",
+      title: L("Voorbeeld: $x$ onder de streep", "Example: $x$ at the bottom"),
+      problem: L(
+        "De hoek is $40^{\\circ}$ en de aanliggende zijde is $8$. Hoe lang is de schuine zijde $x$?",
+        "The angle is $40^{\\circ}$ and the adjacent side is $8$. How long is the hypotenuse $x$?",
+      ),
+      visual: { kind: "right-triangle", angle: 40, show: ["cos"], interactive: false },
+      solution: {
+        steps: [
+          { latex: "\\cos(40^{\\circ})=\\frac{8}{x}", note: L("Aanliggend en schuin: CAS. Nu staat $x$ onder de streep.", "Adjacent and hypotenuse: CAH. Now $x$ is at the bottom.") },
+          {
+            latex: "x=\\hl{\\frac{8}{\\cos(40^{\\circ})}}",
+            note: L(
+              "Links en rechts keer $x$. Deel dan links en rechts door $\\cos(40^{\\circ})$. Kort: $x$ en $\\cos(40^{\\circ})$ ruilen van plek.",
+              "Both sides times $x$. Then divide both sides by $\\cos(40^{\\circ})$. In short: $x$ and $\\cos(40^{\\circ})$ swap places.",
+            ),
+          },
+          { latex: "x\\approx \\ask{10.4}", note: L("Met de rekenmachine op graden.", "With the calculator in degrees."), approx: { decimals: 1 } },
+        ],
+        solutions: [{ x: 8 / Math.cos((40 * Math.PI) / 180) }],
       },
     },
     {

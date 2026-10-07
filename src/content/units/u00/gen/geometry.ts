@@ -269,12 +269,18 @@ export const volume: Generator = {
     const inCm = difficulty === 3;
     const C = (v: number) => (inCm ? v * 10 : v);
     const liters = unit === "dm";
+    // Level 3 works in dm, as in the lesson: then dm³ are litres straight away.
     const steps: Step[] = inCm
       ? [
-          { latex: `\\frac{${C(l)}\\cdot ${C(w)}\\cdot ${C(h)}}{1000}`, note: L("Inhoud in cm³, en dan gedeeld door $1000$: $1$ liter is $1000$ cm³.", "Volume in cm³, then divided by $1000$: $1$ litre is $1000$ cm³.") },
-          { latex: `\\frac{\\ask{${C(l) * C(w)}}\\cdot ${C(h)}}{1000}`, note: L("De bodem: lengte keer breedte.", "The bottom: length times width.") },
-          { latex: `\\frac{\\ask{${vol * 1000}}}{1000}`, note: L("Keer de hoogte. Dit zijn cm³.", "Times the height. These are cm³.") },
-          { latex: `\\ask{${vol}}`, note: L("Gedeeld door $1000$: liters.", "Divided by $1000$: litres.") },
+          {
+            latex: `${l}\\cdot ${w}\\cdot ${h}`,
+            note: L(
+              `Reken eerst om naar dm: $${C(l)}$ cm $=${l}$ dm, $${C(w)}$ cm $=${w}$ dm, $${C(h)}$ cm $=${h}$ dm.`,
+              `First convert to dm: $${C(l)}$ cm $=${l}$ dm, $${C(w)}$ cm $=${w}$ dm, $${C(h)}$ cm $=${h}$ dm.`,
+            ),
+          },
+          { latex: `\\ask{${l * w}}\\cdot ${h}`, note: L("De bodem: lengte keer breedte.", "The bottom: length times width.") },
+          { latex: `\\ask{${vol}}`, note: L("Keer de hoogte. Dat zijn dm³, en $1$ dm³ is $1$ liter.", "Times the height. Those are dm³, and $1$ dm³ is $1$ litre.") },
         ]
       : [
           { latex: `${l}\\cdot ${w}\\cdot ${h}`, note: L("Lengte keer breedte keer hoogte.", "Length times width times height.") },

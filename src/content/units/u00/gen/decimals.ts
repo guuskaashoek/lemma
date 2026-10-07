@@ -428,12 +428,16 @@ export const decimalArithmetic: Generator = {
       };
     }
 
-    // Level 3: multiplying two decimals.
-    const p = rng.int(2, 9);
-    const q = rng.int(2, 9);
-    const big = rng.chance(0.35);
-    const xa = big ? new Fraction(rng.pick([11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25]), 10) : new Fraction(p, 10);
-    const yb = new Fraction(q, rng.chance(0.3) ? 100 : 10);
+    // Level 3: multiplying two decimals. The product of the digits never
+    // ends in 0 (like 5·4 = 20), so "count the decimals" gives the answer as written.
+    let p: number, q: number, big: boolean, xa: Fraction, yb: Fraction;
+    do {
+      p = rng.int(2, 9);
+      q = rng.int(2, 9);
+      big = rng.chance(0.35);
+      xa = big ? new Fraction(rng.pick([11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25]), 10) : new Fraction(p, 10);
+      yb = new Fraction(q, rng.chance(0.3) ? 100 : 10);
+    } while (digitsInt(dec(xa)) * digitsInt(dec(yb)) % 10 === 0);
     const xs = dec(xa);
     const ys = dec(yb);
     const result = xa.mul(yb);

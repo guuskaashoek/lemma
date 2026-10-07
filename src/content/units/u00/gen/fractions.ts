@@ -276,7 +276,16 @@ export const addFractions: Generator = {
         latex: `${q === Lc ? `\\frac{${p}}{${q}}` : `\\hl{\\frac{${p * (Lc / q)}}{${Lc}}}`}${sign}${
           s === Lc ? `\\frac{${r}}{${s}}` : `\\hl{\\frac{${r * (Lc / s)}}{${Lc}}}`
         }`,
-        note: L(`Maak de noemers gelijk. Beide worden $${Lc}$.`, `Make the denominators equal. Both become $${Lc}$.`),
+        note: (() => {
+          // Say how each rewritten fraction is made: top and bottom times the same number.
+          const rewritten = [q !== Lc ? [p, q] : null, s !== Lc ? [r, s] : null].filter((x): x is number[] => x !== null);
+          const nl = rewritten.map(([n, d]) => `$\\frac{${n}}{${d}}$ keer $${Lc / d}$`).join(", ");
+          const en = rewritten.map(([n, d]) => `$\\frac{${n}}{${d}}$ times $${Lc / d}$`).join(", ");
+          return L(
+            `Maak de noemers gelijk: $${Lc}$. Doe boven en onder keer hetzelfde getal: ${nl}.`,
+            `Make the denominators equal: $${Lc}$. Multiply top and bottom by the same number: ${en}.`,
+          );
+        })(),
       });
     }
     const top = minus ? p * (Lc / q) - r * (Lc / s) : p * (Lc / q) + r * (Lc / s);
@@ -290,7 +299,8 @@ export const addFractions: Generator = {
       steps.push({ latex: `\\ask{${frac(result)}}`, note: L("Vereenvoudig de breuk.", "Simplify the fraction.") });
     }
 
-    const naive = minus ? (q - s === 0 ? null : new Fraction(p - r, q - s)) : new Fraction(p + r, q + s);
+    // "Also subtract the denominators" only makes sense when both differences are positive.
+    const naive = minus ? (q > s && p > r ? new Fraction(p - r, q - s) : null) : new Fraction(p + r, q + s);
     const nudge =
       q === s
         ? L(

@@ -86,8 +86,8 @@ export const rules: RuleCard[] = [
     id: "u0.add-fractions",
     name: L("Breuken optellen", "Adding fractions"),
     statement: L(
-      "Maak eerst de noemers gelijk. Tel dan alleen de tellers op. De noemer blijft hetzelfde.",
-      "First make the denominators equal. Then add only the numerators. The denominator stays the same.",
+      "Maak eerst de noemers gelijk: boven en onder keer hetzelfde getal. Tel dan alleen de tellers op. De noemer blijft hetzelfde.",
+      "First make the denominators equal: top and bottom times the same number. Then add only the numerators. The denominator stays the same.",
     ),
     latex: "\\frac{a}{n}+\\frac{b}{n}=\\frac{a+b}{n}",
     lessonId: "u0.fractions",
@@ -95,7 +95,10 @@ export const rules: RuleCard[] = [
       problem: L("Bereken $\\frac{1}{2}+\\frac{1}{3}$.", "Work out $\\frac{1}{2}+\\frac{1}{3}$."),
       steps: [
         { latex: "\\frac{1}{2}+\\frac{1}{3}", note: L("Noemers $2$ en $3$ zijn niet gelijk.", "Denominators $2$ and $3$ are not equal.") },
-        { latex: "\\hl{\\frac{3}{6}}+\\hl{\\frac{2}{6}}", note: L("Maak van beide noemers $6$.", "Make both denominators $6$.") },
+        {
+          latex: "\\hl{\\frac{3}{6}}+\\hl{\\frac{2}{6}}",
+          note: L("Maak van beide noemers $6$: $\\frac{1}{2}$ boven en onder keer $3$, $\\frac{1}{3}$ boven en onder keer $2$.", "Make both denominators $6$: $\\frac{1}{2}$ top and bottom times $3$, $\\frac{1}{3}$ top and bottom times $2$."),
+        },
         { latex: "\\frac{\\hl{5}}{6}", note: L("Tel de tellers op.", "Add the numerators.") },
       ],
     },
@@ -104,7 +107,7 @@ export const rules: RuleCard[] = [
   // Lesson 3 -----------------------------------------------------------------
   {
     id: "u0.times-ten",
-    name: L("Komma schuiven", "Moving the digits"),
+    name: L("Cijfers schuiven", "Moving the digits"),
     statement: L(
       "Keer $10$, $100$, $1000$: de cijfers schuiven $1$, $2$, $3$ plekken naar links. Gedeeld door: naar rechts.",
       "Times $10$, $100$, $1000$: the digits move $1$, $2$, $3$ places to the left. Divided by: to the right.",
@@ -270,18 +273,18 @@ export const rules: RuleCard[] = [
     id: "u0.substitute",
     name: L("Formule invullen", "Filling in a formula"),
     statement: L(
-      "Vervang elke letter door zijn getal. Negatief getal? Zet het tussen haakjes. Reken uit met de rekenvolgorde.",
-      "Replace every letter by its number. Negative number? Put it in brackets. Work it out with the order of operations.",
+      "Vervang elke letter door zijn getal. Een getal vlak voor een letter betekent keer: $2a=2\\cdot a$. Reken uit met de rekenvolgorde.",
+      "Replace every letter by its number. A number right before a letter means times: $2a=2\\cdot a$. Work it out with the order of operations.",
     ),
     lessonId: "u0.formulas",
     example: {
-      problem: L("Bereken $F$ met $F=1.8C+32$ als $C=-10$.", "Work out $F$ with $F=1.8C+32$ when $C=-10$."),
+      problem: L("Bereken $F$ met $F=1.8C+32$ als $C=25$.", "Work out $F$ with $F=1.8C+32$ when $C=25$."),
       steps: [
-        { latex: "F=1.8\\cdot\\hl{(-10)}+32", note: L("Vul in, met haakjes.", "Fill in, with brackets.") },
-        { latex: "F=\\hl{-18}+32", note: L("Eerst keer.", "First multiply.") },
-        { latex: "F=\\hl{14}", note: L("Dan plus.", "Then add.") },
+        { latex: "F=1.8\\cdot\\hl{25}+32", note: L("Vul in. $1.8C$ betekent $1.8\\cdot C$.", "Fill in. $1.8C$ means $1.8\\cdot C$.") },
+        { latex: "F=\\hl{45}+32", note: L("Eerst keer.", "First multiply.") },
+        { latex: "F=\\hl{77}", note: L("Dan plus.", "Then add.") },
       ],
-      solutions: [{ F: 14 }],
+      solutions: [{ F: 77 }],
     },
   },
   {

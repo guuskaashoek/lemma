@@ -119,6 +119,7 @@ export const bundle: UnitBundle = {
         { generatorId: "u0.ratio-table", difficulty: 3, count: 1 },
         { generatorId: "u0.percent-change", difficulty: 3, count: 1 },
         { generatorId: "u0.unit-convert", difficulty: 3, count: 1 },
+        { generatorId: "u0.formula-substitute", difficulty: 3, count: 1 },
         { generatorId: "u0.volume", difficulty: 3, count: 1 },
         { generatorId: "u0.pythagoras-short", difficulty: 3, count: 1 },
         { generatorId: "u0.sohcahtoa-side", difficulty: 3, count: 1 },

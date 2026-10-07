@@ -136,6 +136,8 @@ export const percentOf: Generator = {
 
 type ChangeContext = {
   up: boolean;
+  /** Realistic percentages for level 2, when only a few make sense (btw is 9% or 21%). */
+  percents?: number[];
   /** A realistic starting amount for level 2. */
   amount: (rng: Rng) => Fraction;
   text: (N: string, p: number) => Loc;
@@ -168,6 +170,7 @@ const UP: ChangeContext[] = [
   },
   {
     up: true,
+    percents: [9, 21],
     amount: (rng) => new Fraction(rng.int(30, 120) * 10),
     text: (N, p) =>
       L(`Een fiets kost $${N}$ euro zonder btw. Er komt $${p}\\%$ btw bij. Wat is de prijs met btw?`, `A bike costs $${N}$ euros without VAT. $${p}\\%$ VAT is added. What is the price with VAT?`),
@@ -189,7 +192,7 @@ export const percentChange: Generator = {
       N = new Fraction(20 * rng.int(2, 30));
     } else if (difficulty === 2) {
       ctx = rng.pick([...DOWN, ...UP]);
-      p = ctx.up ? rng.int(2, 9) : rng.int(3, 15) * 2;
+      p = ctx.percents ? rng.pick(ctx.percents) : ctx.up ? rng.int(2, 9) : rng.int(3, 15) * 2;
       N = ctx.amount(rng);
     } else {
       ctx = rng.pick([...DOWN, ...UP].filter((c) => c.reverse));
@@ -208,7 +211,10 @@ export const percentChange: Generator = {
     const mistakes: Mistake[] = [];
 
     if (!reverse) {
-      prompt = ctx.text(money(N), p);
+      const cents = !X.mul(100).equals(X.mul(100).floor());
+      prompt = cents
+        ? L(`${ctx.text(money(N), p).nl} Rond af op centen.`, `${ctx.text(money(N), p).en} Round to cents.`)
+        : ctx.text(money(N), p);
       steps = [
         {
           latex: `${dec(N)}\\cdot\\frac{100${sign}${p}}{100}`,
@@ -220,7 +226,7 @@ export const percentChange: Generator = {
         { latex: `\\ask{${dec(X)}}`, note: L("Reken uit.", "Work it out.") },
       ];
       // Money: round to cents when needed.
-      if (!X.mul(100).equals(X.mul(100).floor())) {
+      if (cents) {
         decimals = 2;
         steps.push({ latex: `${dec(X)}\\approx \\ask{${roundHalfAwayFromZero(X.valueOf(), 2)}}`, note: L("Rond af op centen.", "Round to cents."), approx: { decimals: 2 } });
       }
@@ -265,7 +271,7 @@ export const percentChange: Generator = {
       prompt,
       visual: custom(
         "u0.percent-bar",
-        { from: N.valueOf(), percent: p, up: ctx.up, reverse },
+        { from: N.valueOf(), to: X.valueOf(), percent: p, up: ctx.up, reverse },
         L(
           `Een strook van $100\\%$. Er gaat $${p}\\%$ ${ctx.up ? "bij" : "af"}. De nieuwe strook is $${ctx.up ? 100 + p : 100 - p}\\%$.`,
           `A bar of $100\\%$. $${p}\\%$ is ${ctx.up ? "added" : "taken off"}. The new bar is $${ctx.up ? 100 + p : 100 - p}\\%$.`,
@@ -291,19 +297,20 @@ export const percentChange: Generator = {
         },
         solution: { steps },
       },
-      mistakes,
+      // Mistakes at the precision of the answer, so a learner's typed value matches them.
+      mistakes: mistakes.map((m) => (decimals ? { ...m, latex: String(roundHalfAwayFromZero(Number(m.latex), decimals)) } : m)),
     };
   },
   verify(ex) {
-    // Independent check: old price minus (or plus) the change itself,
-    // without the growth factor.
-    const props = propsOf(ex, "u0.percent-bar") as { from: number; percent: number; up: boolean; reverse: boolean } | null;
+    // Independent check without the growth factor: take the change itself
+    // (p% of the old price) and add it or take it off. For "back to the old
+    // price" the answer is the old price: its change must lead to the new price.
+    const props = propsOf(ex, "u0.percent-bar") as { from: number; to: number; percent: number; up: boolean; reverse: boolean } | null;
     if (!props || ex.answer.kind !== "expr") return false;
     const ans = evaluate(parse(ex.answer.latex));
     if (ans === null) return false;
-    const change = (props.from * props.percent) / 100;
-    const expected = props.reverse ? props.from : props.up ? props.from + change : props.from - change;
-    return Math.abs(ans - expected) < 1e-9;
+    const after = (old: number) => (props.up ? old + (old * props.percent) / 100 : old - (old * props.percent) / 100);
+    return props.reverse ? Math.abs(after(ans) - props.to) < 1e-9 : Math.abs(ans - after(props.from)) < 1e-9;
   },
 };
 
@@ -387,7 +394,10 @@ export const percentWhat: Generator = {
     }
 
     return {
-      prompt: rng.pick(WHAT)(part, whole),
+      prompt: (() => {
+        const q = rng.pick(WHAT)(part, whole);
+        return isWhole ? q : L(`${q.nl} Rond af op $1$ decimaal.`, `${q.en} Round to $1$ decimal.`);
+      })(),
       latex: `\\frac{${part}}{${whole}}`,
       visual: isWhole
         ? custom("u0.hundred-grid", { percent: exact.valueOf() }, L(`Honderd vakjes. Het deel is $${dec(exact)}$ vakjes.`, `A hundred squares. The part is $${dec(exact)}$ squares.`))

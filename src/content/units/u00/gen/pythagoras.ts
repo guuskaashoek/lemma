@@ -47,11 +47,12 @@ function sides(rng: Rng, difficulty: Difficulty, context: boolean): { a: number;
       if (!Number.isInteger(Math.sqrt(a * a + b * b))) return { a, b, scale: 1 };
     }
   }
-  // Level 3: lengths in metres with one decimal (stored as tenths).
+  // Level 3: a ladder, lengths in metres with one decimal (stored as tenths).
+  // A real ladder stands steep: the height is at least twice the distance.
   for (;;) {
-    const a = rng.int(5, 40);
-    const b = rng.int(10, 80);
-    if (a !== b && !Number.isInteger(Math.sqrt(a * a + b * b))) return { a, b, scale: 10 };
+    const a = rng.int(5, 25);
+    const b = rng.int(Math.max(2 * a, 20), 80);
+    if (!Number.isInteger(Math.sqrt(a * a + b * b))) return { a, b, scale: 10 };
   }
 }
 
@@ -103,8 +104,8 @@ export const pythagorasLong: Generator = {
     return {
       prompt: context
         ? L(
-            `Een ladder staat $${dec(a)}$ m van een muur. De ladder raakt de muur op $${dec(b)}$ m hoogte. Hoe lang is de ladder? Rond af op $1$ decimaal.`,
-            `A ladder stands $${dec(a)}$ m from a wall. It touches the wall at a height of $${dec(b)}$ m. How long is the ladder? Round to $1$ decimal.`,
+            `Een ladder staat tegen een muur. De voet van de ladder staat $${dec(a)}$ m van de muur. De ladder raakt de muur op $${dec(b)}$ m hoogte. Hoe lang is de ladder? Rond af op $1$ decimaal.`,
+            `A ladder leans against a wall. The foot of the ladder is $${dec(a)}$ m from the wall. The ladder touches the wall at a height of $${dec(b)}$ m. How long is the ladder? Round to $1$ decimal.`,
           )
         : L(
             `Bereken de schuine zijde $x$.${whole ? "" : " Rond af op $1$ decimaal."}`,
@@ -148,11 +149,12 @@ export const pythagorasShort: Generator = {
       c = rng.int(5, 15);
       a = rng.int(2, c - 1);
     } else {
-      // c is a bit longer than a; the missing side is not whole.
+      // c is a bit longer than a; the missing side is not whole. A ladder
+      // (level 3) stands steep: at least twice as long as its distance to the wall.
       const scale = context ? 10 : 1;
       for (;;) {
-        const A = context ? rng.int(5, 30) : rng.int(2, 15);
-        const C = A + (context ? rng.int(5, 50) : rng.int(1, 10));
+        const A = context ? rng.int(5, 25) : rng.int(2, 15);
+        const C = context ? rng.int(Math.max(2 * A + 1, 20), 80) : A + rng.int(1, 10);
         if (!Number.isInteger(Math.sqrt(C * C - A * A))) {
           a = A / scale;
           c = C / scale;
@@ -187,8 +189,8 @@ export const pythagorasShort: Generator = {
     return {
       prompt: context
         ? L(
-            `Een ladder van $${dec(c)}$ m staat tegen een muur. De voet staat $${dec(a)}$ m van de muur. Hoe hoog komt de ladder? Rond af op $1$ decimaal.`,
-            `A ladder of $${dec(c)}$ m leans against a wall. The foot is $${dec(a)}$ m from the wall. How high does the ladder reach? Round to $1$ decimal.`,
+            `Een ladder van $${dec(c)}$ m staat tegen een muur. De voet van de ladder staat $${dec(a)}$ m van de muur. Hoe hoog komt de ladder? Rond af op $1$ decimaal.`,
+            `A ladder of $${dec(c)}$ m leans against a wall. The foot of the ladder is $${dec(a)}$ m from the wall. How high does the ladder reach? Round to $1$ decimal.`,
           )
         : L(`Bereken de zijde $x$.${whole ? "" : " Rond af op $1$ decimaal."}`, `Work out the side $x$.${whole ? "" : " Round to $1$ decimal."}`),
       latex: difficulty === 1 ? `x^{2}=${dec(c)}^{2}-${dec(a)}^{2}` : undefined,

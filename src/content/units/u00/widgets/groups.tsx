@@ -12,12 +12,13 @@
 import type { Loc } from "@/i18n/locale";
 import { Btn, numText, Tex, UI, useLoc, useSteps } from "./kit";
 
-type Props = { total: number; parts: number[]; names?: Loc[] };
+/** `given`: only one part is known (its index and amount); the total is then not shown. */
+type Props = { total: number; parts: number[]; names?: Loc[]; given?: { index: number; amount: number } };
 
 const DOTS_MAX = 60;
 
 export function Groups({ props }: { props: Record<string, unknown> }) {
-  const { total, parts, names } = props as Props;
+  const { total, parts, names, given } = props as Props;
   const { l, locale } = useLoc();
   const groups = parts.reduce((a, b) => a + b, 0);
   const per = total / groups;
@@ -118,18 +119,28 @@ export function Groups({ props }: { props: Record<string, unknown> }) {
           <g>
             <rect x={20} y={10} width={W - 40} height={GH} rx={10} fill="var(--c-num)" fillOpacity={0.15} stroke="var(--border-strong)" />
             <text x={W / 2} y={10 + GH / 2 + 6} textAnchor="middle" fontSize={18} fill="var(--c-num)">
-              {numText(total, locale)}
+              {given ? "?" : numText(total, locale)}
             </text>
           </g>
         )}
       </svg>
 
       <div className="min-h-16 space-y-1 text-center text-lg" aria-live="polite">
-        {step === 0 && <p>{l({ nl: `Dit zijn er ${numText(total, locale)}.`, en: `These are ${numText(total, locale)}.` })}</p>}
+        {step === 0 && !given && <p>{l({ nl: `Dit zijn er ${numText(total, locale)}.`, en: `These are ${numText(total, locale)}.` })}</p>}
+        {step === 0 && given && (
+          <p>
+            {names?.[given.index] ? `${l(names[given.index])}: ` : ""}
+            {l({
+              nl: `${numText(given.amount, locale)} is ${parts[given.index]} ${parts[given.index] === 1 ? "groepje" : "groepjes"}.`,
+              en: `${numText(given.amount, locale)} is ${parts[given.index]} ${parts[given.index] === 1 ? "group" : "groups"}.`,
+            })}
+          </p>
+        )}
         {step === 1 && (
           <p>{l({ nl: `Verdeeld in ${groups} gelijke groepjes.`, en: `Shared into ${groups} equal groups.` })}</p>
         )}
-        {step === 2 && <Tex latex={`${numText(total, "en")}:${groups}=${numText(per, "en")}`} />}
+        {step === 2 && !given && <Tex latex={`${numText(total, "en")}:${groups}=${numText(per, "en")}`} />}
+        {step === 2 && given && <Tex latex={`${numText(given.amount, "en")}:${parts[given.index]}=${numText(per, "en")}`} />}
         {step >= 3 &&
           parts.map((p, i) => (
             <div key={i}>

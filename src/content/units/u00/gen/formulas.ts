@@ -33,9 +33,6 @@ type Filled = {
   machine?: string;
 };
 
-/** "(-10)" for negative numbers, so a filled-in product stays readable. */
-const br = (v: number) => (v < 0 ? `(${dec(v)})` : dec(v));
-
 function linear(rng: Rng, difficulty: Difficulty): Filled {
   type Ctx = { out: string; inp: string; meaning: Loc; unit: string; s: () => number; r: () => number; x: (s: number, r: number) => number; minus?: boolean };
   const easy: Ctx[] = [
@@ -169,8 +166,8 @@ function special(rng: Rng): Filled {
     };
   }
   if (kind === 1) {
-    // Temperature: F = 1.8C + 32.
-    const C = 5 * rng.int(-4, 8);
+    // Temperature: F = 1.8C + 32. Not below 0 °C: negative numbers come in unit 1.
+    const C = 5 * rng.int(1, 8);
     const prod = new Fraction(18, 10).mul(C);
     const value = prod.add(32);
     return {
@@ -180,7 +177,7 @@ function special(rng: Rng): Filled {
       meaning: L("$F$ is de temperatuur in graden Fahrenheit. $C$ is de temperatuur in graden Celsius.", "$F$ is the temperature in degrees Fahrenheit. $C$ is the temperature in degrees Celsius."),
       unit: "°F",
       steps: [
-        { rhs: `1.8\\cdot\\hl{${br(C)}}+32`, note: L(`Vul in: $C=${C}$.${C < 0 ? " Zet een negatief getal tussen haakjes." : ""}`, `Fill in: $C=${C}$.${C < 0 ? " Put a negative number in brackets." : ""}`) },
+        { rhs: `1.8\\cdot\\hl{${C}}+32`, note: L(`Vul in: $C=${C}$. Let op: $1.8C$ betekent $1.8\\cdot C$.`, `Fill in: $C=${C}$. Note: $1.8C$ means $1.8\\cdot C$.`) },
         { rhs: `\\ask{${dec(prod)}}+32`, note: L("Eerst keer.", "First multiply.") },
         { rhs: `\\ask{${dec(value)}}`, note: L("Dan plus $32$.", "Then add $32$.") },
       ],
@@ -255,8 +252,8 @@ export const formulaSubstitute: Generator = {
         ),
         rule: {
           text: L(
-            "Formule invullen: vervang elke letter door zijn getal. Negatief getal? Zet het tussen haakjes. Reken dan uit met de rekenvolgorde.",
-            "Filling in a formula: replace every letter by its number. Negative number? Put it in brackets. Then work it out with the order of operations.",
+            "Formule invullen: vervang elke letter door zijn getal. Een getal vlak voor een letter betekent keer. Reken dan uit met de rekenvolgorde.",
+            "Filling in a formula: replace every letter by its number. A number right before a letter means times. Then work it out with the order of operations.",
           ),
           ruleId: "u0.substitute",
           metaphor: "machine",
@@ -291,9 +288,11 @@ export const tableRead: Generator = {
   skillId: "u0.tables-graphs",
   title: L("Tabellen lezen", "Reading tables"),
   generate(rng, difficulty) {
-    const s = difficulty === 3 ? rng.int(-5, 25) : rng.int(1, 20);
     const r = difficulty === 3 && rng.chance(0.4) ? -rng.int(2, 5) : rng.int(2, difficulty === 1 ? 9 : 6);
     const x0 = difficulty === 3 ? rng.int(3, 6) : 0;
+    // No negative numbers (those come in unit 1): with a falling table the
+    // start is high enough for the last column to stay at 0 or above.
+    const s = difficulty === 3 ? (r < 0 ? -r * (x0 + 3) + rng.int(0, 20) : rng.int(0, 25)) : rng.int(1, 20);
     const xs = [x0, x0 + 1, x0 + 2, x0 + 3];
     const y = (x: number) => s + r * x;
     const ys = xs.map(y);
@@ -361,7 +360,10 @@ export const tableRead: Generator = {
         mistakes.push({
           id: "proportional",
           latex: String((ys[3] * X) / 3),
-          explain: L("De tabel begint niet bij $0$. Je mag dus niet zomaar keer doen. Gebruik het startgetal en de stap.", "The table does not start at $0$. So you cannot just multiply. Use the starting number and the step."),
+          explain: L(
+            `Bij $x=0$ is $y$ niet $0$, maar $${s}$. Je mag dus niet zomaar keer doen. Gebruik het startgetal en de stap.`,
+            `At $x=0$, $y$ is not $0$ but $${s}$. So you cannot just multiply. Use the starting number and the step.`,
+          ),
         });
       }
     }

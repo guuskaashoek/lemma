@@ -65,8 +65,8 @@ export const geometryLesson: Lesson = {
       kind: "visual",
       title: L("De cirkel en $\\pi$", "The circle and $\\pi$"),
       body: L(
-        "De **straal** $r$ gaat van het midden naar de rand. De **diameter** $d$ is twee stralen.\nRol de rand uit: hij is iets meer dan $3$ diameters. Precies $\\pi\\approx 3.14$ keer.",
-        "The **radius** $r$ goes from the centre to the edge. The **diameter** $d$ is two radii.\nRoll out the edge: it is a bit more than $3$ diameters. Exactly $\\pi\\approx 3.14$ times.",
+        "De **straal** $r$ gaat van het midden naar de rand. De **diameter** $d$ is twee stralen.\nRol de rand uit: hij is iets meer dan $3$ diameters. Precies $\\pi$ keer. $\\pi$ is ongeveer $3.14$.",
+        "The **radius** $r$ goes from the centre to the edge. The **diameter** $d$ is two radii.\nRoll out the edge: it is a bit more than $3$ diameters. Exactly $\\pi$ times. $\\pi$ is about $3.14$.",
       ),
       visual: custom("u0.shape-grid", { shape: "circle", r: 3, unit: "cm" }, L("Een cirkel met straal $3$ cm. De rand wordt uitgerold.", "A circle with radius $3$ cm. The edge is rolled out.")),
       task: L("Speel het af. Hoe vaak past de diameter in de rand?", "Play it. How many times does the diameter fit in the edge?"),

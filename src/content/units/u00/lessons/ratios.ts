@@ -107,14 +107,14 @@ export const ratiosLesson: Lesson = {
       kind: "example",
       title: L("Voorbeeld: limonade", "Example: lemonade"),
       problem: L(
-        "Siroop en water gaan in de verhouding $1:4$. Je maakt $500$ ml limonade. Hoeveel ml siroop?",
-        "Syrup and water go in the ratio $1:4$. You make $500$ ml of lemonade. How many ml of syrup?",
+        "Siroop en water gaan in de verhouding $1:4$. Je maakt $500$ mL limonade. Hoeveel mL siroop?",
+        "Syrup and water go in the ratio $1:4$. You make $500$ mL of lemonade. How many mL of syrup?",
       ),
       solution: {
         steps: [
           { latex: "\\frac{500}{1+4}\\cdot 1", note: L("Tel de delen op: $1+4$.", "Add the parts: $1+4$.") },
           { latex: "\\frac{500}{\\ask{5}}", note: L("$5$ groepjes.", "$5$ groups.") },
-          { latex: "\\ask{100}", note: L("Eén groepje is $100$ ml. Siroop is $1$ groepje.", "One group is $100$ ml. Syrup is $1$ group.") },
+          { latex: "\\ask{100}", note: L("Eén groepje is $100$ mL. Siroop is $1$ groepje.", "One group is $100$ mL. Syrup is $1$ group.") },
         ],
       },
     },

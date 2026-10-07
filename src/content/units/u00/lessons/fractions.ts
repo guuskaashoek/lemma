@@ -123,9 +123,14 @@ export const fractionsLesson: Lesson = {
         steps: [
           { latex: "\\frac{2}{3}+\\frac{1}{4}", note: L("De noemers $3$ en $4$ zijn niet gelijk.", "The denominators $3$ and $4$ are not equal.") },
           {
-            latex: "\\hl{\\frac{8}{12}}+\\hl{\\frac{3}{12}}",
-            note: L("$12$ zit in de tafel van $3$ én van $4$. Maak van beide twaalfden.", "$12$ is in the times table of $3$ and of $4$. Turn both into twelfths."),
+            latex: "\\frac{\\hl{2\\cdot 4}}{\\hl{3\\cdot 4}}+\\frac{\\hl{1\\cdot 3}}{\\hl{4\\cdot 3}}",
+            note: L(
+              "$12$ zit in de tafel van $3$ én van $4$. Maak van beide twaalfden: boven en onder keer hetzelfde getal.",
+              "$12$ is in the times table of $3$ and of $4$. Turn both into twelfths: top and bottom times the same number.",
+            ),
           },
+          { latex: "\\frac{\\ask{8}}{12}+\\frac{1\\cdot 3}{4\\cdot 3}", note: L("Boven: $2\\cdot 4=8$.", "Top: $2\\cdot 4=8$.") },
+          { latex: "\\frac{8}{12}+\\frac{\\ask{3}}{12}", note: L("Boven: $1\\cdot 3=3$.", "Top: $1\\cdot 3=3$.") },
           { latex: "\\frac{\\ask{11}}{12}", note: L("Tel de tellers op: $8+3=11$.", "Add the numerators: $8+3=11$.") },
         ],
       },
@@ -134,8 +139,8 @@ export const fractionsLesson: Lesson = {
       kind: "explain",
       title: L("Breuken optellen", "Adding fractions"),
       body: L(
-        "Maak eerst de noemers gelijk.\nTel dan alleen de tellers op. De noemer blijft hetzelfde.\nAftrekken gaat net zo.\nZie [[rule:u0.add-fractions]].",
-        "First make the denominators equal.\nThen add only the numerators. The denominator stays the same.\nSubtracting works the same way.\nSee [[rule:u0.add-fractions]].",
+        "Maak eerst de noemers gelijk. Doe boven en onder keer hetzelfde getal.\nTel dan alleen de tellers op. De noemer blijft hetzelfde.\nAftrekken gaat net zo.\nZie [[rule:u0.add-fractions]].",
+        "First make the denominators equal. Multiply top and bottom by the same number.\nThen add only the numerators. The denominator stays the same.\nSubtracting works the same way.\nSee [[rule:u0.add-fractions]].",
       ),
       latex: "\\frac{a}{n}+\\frac{b}{n}=\\frac{a+b}{n}",
       ruleId: "u0.add-fractions",
