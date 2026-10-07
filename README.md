@@ -206,3 +206,7 @@ scripts/               admin and maintenance scripts
 - **Generator**: implement `generate()` and an independent `verify()` in `src/content/generators/`, register it in `generators/index.ts`, and add a skill in `curriculum.ts`. The content tests pick it up automatically.
 - **Rule card**: add it to `src/content/rules.ts`. Its example is validated by the tests.
 
+
+## License
+
+[MIT](LICENSE)
