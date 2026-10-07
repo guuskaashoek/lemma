@@ -56,7 +56,7 @@ export const compareNumbers: Generator = {
       const askRight = !smallest && i + 2 === sorted.length;
       steps.push({
         latex: `${askLeft ? `\\ask{${a}}` : a}<${askRight ? `\\ask{${b}}` : b}`,
-        note: L(`$${a}$ ligt links van $${b}$, dus is kleiner.`, `$${a}$ is to the left of $${b}$, so it is smaller.`),
+        note: L(`$${a}$ ligt links van $${b}$. Dus is het kleiner.`, `$${a}$ is to the left of $${b}$, so it is smaller.`),
       });
     }
     const quoted = latexOf.map((l) => `$${l}$`);
@@ -152,7 +152,7 @@ export const addSubtract: Generator = {
       } while (!(a < 0 || a + jumpOf(terms[0]) < 0));
     } else if (difficulty === 2) {
       // a + (−b) or a − (−b).
-      a = rng.int(-12, 12);
+      a = rng.nonZeroInt(-12, 12);
       terms = [{ op: rng.pick(["+", "-"] as const), n: -rng.int(1, 9) }];
     } else {
       // Three numbers, at least one negative one in brackets.

@@ -90,10 +90,20 @@ export const squareRootsLesson: Lesson = {
       kind: "explain",
       title: L("De derdemachtswortel", "The cube root"),
       body: L(
-        "Een kubus van $27$ blokjes heeft ribbe $3$, want $3\\cdot 3\\cdot 3=27$.\nJe schrijft $\\sqrt[3]{27}=3$.\nDeze mag wel negatief zijn: $\\sqrt[3]{-8}=-2$, want $(-2)^{3}=-8$.",
-        "A cube of $27$ blocks has edge $3$, because $3\\cdot 3\\cdot 3=27$.\nYou write $\\sqrt[3]{27}=3$.\nThis one may be negative: $\\sqrt[3]{-8}=-2$, because $(-2)^{3}=-8$.",
+        "Een kubus van $27$ blokjes heeft ribbe $3$, want $3\\cdot 3\\cdot 3=27$.\nJe schrijft $\\sqrt[3]{27}=3$. Dit heet de **derdemachtswortel**.\nDeze mag wel negatief zijn: $\\sqrt[3]{-8}=-2$, want $(-2)^{3}=-8$. Zie [[rule:u1.cube-root]].",
+        "A cube of $27$ blocks has edge $3$, because $3\\cdot 3\\cdot 3=27$.\nYou write $\\sqrt[3]{27}=3$. This is called the **cube root**.\nThis one may be negative: $\\sqrt[3]{-8}=-2$, because $(-2)^{3}=-8$. See [[rule:u1.cube-root]].",
       ),
       latex: "\\sqrt[3]{27}=3",
+      ruleId: "u1.cube-root",
+    },
+    {
+      kind: "explain",
+      title: L("Kommagetallen en breuken", "Decimals and fractions"),
+      body: L(
+        "Ook hier: welk getal keer zichzelf geeft het getal?\n$\\sqrt{0.09}=0.3$, want $0.3\\cdot 0.3=0.09$.\nBij een breuk: neem de wortel van boven en van onder. $\\sqrt{\\frac{4}{9}}=\\frac{2}{3}$, want $\\frac{2}{3}\\cdot\\frac{2}{3}=\\frac{4}{9}$.",
+        "Same question: which number times itself gives the number?\n$\\sqrt{0.09}=0.3$, because $0.3\\cdot 0.3=0.09$.\nWith a fraction: take the root of the top and of the bottom. $\\sqrt{\\frac{4}{9}}=\\frac{2}{3}$, because $\\frac{2}{3}\\cdot\\frac{2}{3}=\\frac{4}{9}$.",
+      ),
+      latex: "\\sqrt{\\frac{4}{9}}=\\frac{2}{3}",
     },
     {
       kind: "explain",
@@ -103,6 +113,7 @@ export const squareRootsLesson: Lesson = {
         "A root works like brackets: first work out what is under it.\nYou may not join two roots with plus.\n$\\sqrt{9}+\\sqrt{16}=3+4=7$. But $\\sqrt{9+16}=\\sqrt{25}=5$.",
       ),
       latex: "\\sqrt{9}+\\sqrt{16}\\neq\\sqrt{25}",
+      mnemonic: "hmwvdoa",
     },
     {
       kind: "example",

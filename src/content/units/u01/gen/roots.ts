@@ -5,7 +5,7 @@
  * - simplifying a root: √50 = 5√2 (and back).
  */
 import Fraction from "fraction.js";
-import type { Generator, Loc, Step } from "@/content/types";
+import type { GeneratedExercise, Generator, Loc, Step } from "@/content/types";
 import type { AnswerSpec, Mistake } from "@/math/check";
 import { frac, gcd } from "@/math/latex";
 import type { Rng } from "@/math/random";
@@ -57,8 +57,8 @@ type Built = {
   visual?: VisualSpec;
 };
 
-/** √(k²), bare or as the side of a square. */
-function plainRoot(k: number, asSquare: boolean): Built {
+/** √(k²): bare, as the side of a square, or as the box in □² = k². */
+function plainRoot(k: number, form: "root" | "area" | "box"): Built {
   const n = k * k;
   const steps: Step[] = [
     { latex: `\\sqrt{${n}}`, note: L(`Welk getal keer zichzelf is $${n}$?`, `Which number times itself is $${n}$?`) },
@@ -66,10 +66,13 @@ function plainRoot(k: number, asSquare: boolean): Built {
     { latex: `\\ask{${k}}`, note: L(`Dus de wortel is $${k}$.`, `So the root is $${k}$.`) },
   ];
   return {
-    latex: asSquare ? `A=${n}` : `\\sqrt{${n}}`,
-    prompt: asSquare
-      ? L(`Een vierkant heeft een oppervlakte van $${n}$ hokjes. Hoe lang is een zijde?`, `A square has an area of $${n}$ cells. How long is one side?`)
-      : L("Bereken.", "Work it out."),
+    latex: form === "area" ? `A=${n}` : form === "box" ? `\\square^{2}=${n}` : `\\sqrt{${n}}`,
+    prompt:
+      form === "area"
+        ? L(`Een vierkant heeft een oppervlakte van $${n}$ hokjes. Hoe lang is een zijde?`, `A square has an area of $${n}$ cells. How long is one side?`)
+        : form === "box"
+          ? L("Welk positief getal komt in het vakje?", "Which positive number goes in the box?")
+          : L("Bereken.", "Work it out."),
     answer: { kind: "expr", latex: String(k), form: "integer" },
     value: String(k),
     steps,
@@ -104,35 +107,37 @@ function plainRoot(k: number, asSquare: boolean): Built {
 function specialRoot(rng: Rng): Built {
   const kind = rng.int(0, 2);
   if (kind === 0) {
-    // √0.09 = 0.3 or √1.44 = 1.2
-    const k = rng.pick([1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19]);
-    const n = new Fraction(k * k, 100);
-    const r = new Fraction(k, 10);
+    // √0.09 = 0.3, √1.44 = 1.2 or √0.0004 = 0.02
+    const small = rng.chance(0.3);
+    const [D, R] = small ? [10000, 100] : [100, 10];
+    const k = small ? rng.int(1, 9) : rng.pick([1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15]);
+    const n = new Fraction(k * k, D);
+    const r = new Fraction(k, R);
     const nd = n.toString();
     const rd = r.toString();
     return {
       latex: `\\sqrt{${nd}}`,
       prompt: L("Bereken. Geef je antwoord als kommagetal.", "Work it out. Give your answer as a decimal."),
-      answer: { kind: "expr", latex: rd, form: "decimal", decimals: 1 },
+      answer: { kind: "expr", latex: rd, form: "decimal", decimals: small ? 2 : 1 },
       value: rd,
       steps: [
         { latex: `\\sqrt{${nd}}`, note: L(`Schrijf $${nd}$ als breuk.`, `Write $${nd}$ as a fraction.`) },
-        { latex: `\\sqrt{\\hl{\\frac{${k * k}}{100}}}`, note: L(`$${nd}=\\frac{${k * k}}{100}$.`, `$${nd}=\\frac{${k * k}}{100}$.`) },
-        { latex: `\\frac{\\ask{${k}}}{10}`, note: L(`$\\sqrt{${k * k}}=${k}$ en $\\sqrt{100}=10$.`, `$\\sqrt{${k * k}}=${k}$ and $\\sqrt{100}=10$.`) },
+        { latex: `\\sqrt{\\hl{\\frac{${k * k}}{${D}}}}`, note: L(`$${nd}=\\frac{${k * k}}{${D}}$.`, `$${nd}=\\frac{${k * k}}{${D}}$.`) },
+        { latex: `\\frac{\\ask{${k}}}{${R}}`, note: L(`$\\sqrt{${k * k}}=${k}$ en $\\sqrt{${D}}=${R}$.`, `$\\sqrt{${k * k}}=${k}$ and $\\sqrt{${D}}=${R}$.`) },
         { latex: `\\ask{${rd}}`, note: L("Als kommagetal.", "As a decimal.") },
       ],
       nudge: L(
-        `Controleer je antwoord met keer: welk kommagetal keer zichzelf is $${nd}$? Tip: $${nd}=\\frac{${k * k}}{100}$.`,
-        `Check your answer by multiplying: which decimal times itself is $${nd}$? Tip: $${nd}=\\frac{${k * k}}{100}$.`,
+        `Controleer je antwoord met keer: welk kommagetal keer zichzelf is $${nd}$? Tip: $${nd}=\\frac{${k * k}}{${D}}$.`,
+        `Check your answer by multiplying: which decimal times itself is $${nd}$? Tip: $${nd}=\\frac{${k * k}}{${D}}$.`,
       ),
       rule: rootRule,
       mistakes: [
         {
           id: "wrong-place",
-          latex: new Fraction(k, 100).toString(),
+          latex: new Fraction(k, 10 * R).toString(),
           explain: L(
-            `Controleer: $${new Fraction(k, 100).toString()}\\cdot ${new Fraction(k, 100).toString()}$ is veel kleiner dan $${nd}$. Let op de komma.`,
-            `Check: $${new Fraction(k, 100).toString()}\\cdot ${new Fraction(k, 100).toString()}$ is much smaller than $${nd}$. Watch the decimal point.`,
+            `Controleer: $${new Fraction(k, 10 * R).toString()}\\cdot ${new Fraction(k, 10 * R).toString()}$ is veel kleiner dan $${nd}$. Let op de komma.`,
+            `Check: $${new Fraction(k, 10 * R).toString()}\\cdot ${new Fraction(k, 10 * R).toString()}$ is much smaller than $${nd}$. Watch the decimal point.`,
           ),
           relatedSkill: "u0.decimal-arithmetic",
         },
@@ -142,7 +147,7 @@ function specialRoot(rng: Rng): Built {
   if (kind === 1) {
     // √(p²/q²) = p/q
     let p: number, q: number;
-    do [p, q] = [rng.int(1, 6), rng.int(2, 9)];
+    do [p, q] = [rng.int(1, 6), rng.int(2, 12)];
     while (p >= q || gcd(p, q) !== 1);
     const f = `\\frac{${p * p}}{${q * q}}`;
     return {
@@ -170,7 +175,7 @@ function specialRoot(rng: Rng): Built {
     };
   }
   // ∛(k³), also with a negative number.
-  const k = rng.int(2, 10) * (rng.chance(0.3) ? -1 : 1);
+  const k = rng.pick([2, 3, 4, 5, 6, 10]) * (rng.chance(0.3) ? -1 : 1);
   const n = k ** 3;
   return {
     latex: `\\sqrt[3]{${n}}`,
@@ -191,22 +196,19 @@ function specialRoot(rng: Rng): Built {
         : L(`Probeer: $2\\cdot 2\\cdot 2=8$, $3\\cdot 3\\cdot 3=27$. Welk getal geeft $${n}$?`, `Try: $2\\cdot 2\\cdot 2=8$, $3\\cdot 3\\cdot 3=27$. Which number gives $${n}$?`),
     rule: {
       text: L("Derdemachtswortel: $\\sqrt[3]{a}$ is het getal dat tot de derde macht $a$ geeft. Bij een kubus is dat de ribbe.", "Cube root: $\\sqrt[3]{a}$ is the number whose cube is $a$. For a cube that is the edge."),
-      ruleId: "u1.square-root",
+      ruleId: "u1.cube-root",
     },
     mistakes: [{ id: "third", latex: frac(new Fraction(n, 3)), explain: L("Een derdemachtswortel is niet delen door $3$. Zoek een getal $g$ met $g\\cdot g\\cdot g$.", "A cube root is not dividing by $3$. Find a number $g$ with $g\\cdot g\\cdot g$.") }],
   };
 }
 
+/** Triples whose long side is a root the learner knows (up to 15, and 20). */
 const PYTHAGOREAN: Array<[number, number, number]> = [
   [3, 4, 5],
   [6, 8, 10],
   [5, 12, 13],
   [9, 12, 15],
-  [8, 15, 17],
   [12, 16, 20],
-  [7, 24, 25],
-  [15, 20, 25],
-  [20, 21, 29],
 ];
 
 /** Roots inside a sum. */
@@ -332,8 +334,8 @@ export const squareRoot: Generator = {
   generate(rng, difficulty) {
     let b: Built;
     if (difficulty === 1) {
-      const k = rng.chance(0.75) ? rng.int(1, 20) : 10 * rng.int(2, 12);
-      b = plainRoot(k, rng.chance(0.4));
+      const k = rng.chance(0.75) ? rng.int(2, 15) : 10 * rng.int(2, 12);
+      b = plainRoot(k, rng.pick(["root", "root", "area", "box"] as const));
     } else if (difficulty === 2) b = specialRoot(rng);
     else b = rootInSum(rng);
     return {
@@ -352,6 +354,7 @@ export const squareRoot: Generator = {
     const ans = valueOf(ex.answer.latex);
     if (ans === null) return false;
     if (ex.latex.startsWith("A=")) return ans > 0 && Math.abs(ans * ans - Number(ex.latex.slice(2))) < 1e-9;
+    if (ex.latex.startsWith("\\square^{2}=")) return ans > 0 && Math.abs(ans * ans - Number(ex.latex.split("=")[1])) < 1e-9;
     const cube = ex.latex.match(/^\\sqrt\[3\]\{(-?\d+)\}$/);
     if (cube) return Math.abs(ans ** 3 - Number(cube[1])) < 1e-9;
     const v = valueOf(ex.latex);
@@ -363,12 +366,26 @@ export const squareRoot: Generator = {
 // Estimating a root between two whole numbers
 // ---------------------------------------------------------------------------
 
+/** Hint 1 for estimating √n: where to start looking, without the answer. */
+function estimateNudge(n: number, below: number): Loc {
+  if (n < 100)
+    return L(
+      `Welk kwadraat ligt net onder $${n}$? En welk net erboven? Kijk in het rijtje $1, 4, 9, 16, 25, 36, 49, 64, 81, 100$.`,
+      `Which square number is just below $${n}$? And which one just above? Look at the list $1, 4, 9, 16, 25, 36, 49, 64, 81, 100$.`,
+    );
+  const t = 10 * Math.floor(below / 10);
+  return L(
+    `Begin bij $${t}^{2}=${t * t}$. Dat is kleiner dan $${n}$. Probeer dan $${t + 1}^{2}$, $${t + 2}^{2}$, ... tot je boven $${n}$ komt.`,
+    `Start at $${t}^{2}=${t * t}$. That is less than $${n}$. Then try $${t + 1}^{2}$, $${t + 2}^{2}$, ... until you get above $${n}$.`,
+  );
+}
+
 export const rootEstimate: Generator = {
   id: "u1.root-estimate",
   skillId: "u1.root-estimate",
   title: L("Wortels schatten", "Estimating roots"),
   generate(rng, difficulty) {
-    const [lo, hi] = difficulty === 1 ? [2, 99] : difficulty === 2 ? [101, 399] : [401, 999];
+    const [lo, hi] = difficulty === 1 ? [2, 99] : difficulty === 2 ? [101, 224] : [226, 999];
     let n: number;
     do n = rng.int(lo, hi);
     while (perfectRoot(n) !== null);
@@ -398,10 +415,7 @@ export const rootEstimate: Generator = {
       },
       calculator: "off",
       hints: {
-        nudge: L(
-          `Zoek twee kwadraten naast elkaar: één net onder $${n}$ en één net erboven. Probeer $${below - 1}^{2}$, $${below}^{2}$, $${above}^{2}$...`,
-          `Find two squares next to each other: one just below $${n}$ and one just above it. Try $${below - 1}^{2}$, $${below}^{2}$, $${above}^{2}$...`,
-        ),
+        nudge: estimateNudge(n, below),
         rule: {
           text: L(
             "Ligt een getal tussen twee kwadraten, dan ligt de wortel tussen de twee grondtallen: $36<40<49$, dus $6<\\sqrt{40}<7$.",
@@ -528,8 +542,9 @@ export const simplifyRoot: Generator = {
           ),
           rule: simplifyRule,
           solution: {
+            // The steps follow the number in the box (under the root).
             steps: [
-              { latex: `${k}^{2}\\cdot ${b}`, note: L(`Breng $${k}$ onder de wortel. Dan wordt het $${k}^{2}$.`, `Bring $${k}$ under the root. Then it becomes $${k}^{2}$.`) },
+              { latex: `${k}^{2}\\cdot ${b}`, note: L(`$${k}=\\sqrt{${k}^{2}}$. Dus onder de wortel komt $${k}^{2}\\cdot ${b}$.`, `$${k}=\\sqrt{${k}^{2}}$. So under the root you get $${k}^{2}\\cdot ${b}$.`) },
               { latex: `\\ask{${k * k}}\\cdot ${b}`, note: L(`$${k}^{2}=${k * k}$.`, `$${k}^{2}=${k * k}$.`) },
               { latex: `\\ask{${n}}`, note: L(`Dus $${k}\\sqrt{${b}}=\\sqrt{${n}}$.`, `So $${k}\\sqrt{${b}}=\\sqrt{${n}}$.`) },
             ],
@@ -575,32 +590,13 @@ export const simplifyRoot: Generator = {
         },
       };
     }
-    // √p·√q = √(pq), then simplify. p and q are chosen so pq = k²·b.
-    const divisors = [...Array(n).keys()].slice(2).filter((d) => n % d === 0 && d * d < n && perfectRoot(d) === null && perfectRoot(n / d) === null);
-    const p = divisors.length > 0 ? rng.pick(divisors) : b;
-    const q = n / p;
-    const latex = `\\sqrt{${p}}\\cdot\\sqrt{${q}}`;
-    return {
-      prompt,
-      latex,
-      visual: squareFactor(n),
-      answer: multi(k, b),
-      calculator: "off",
-      hints: {
-        nudge: L(
-          `Zet alles onder één wortel: $\\sqrt{${p}\\cdot ${q}}=\\sqrt{${n}}$. Vereenvoudig dan.`,
-          `Put everything under one root: $\\sqrt{${p}\\cdot ${q}}=\\sqrt{${n}}$. Then simplify.`,
-        ),
-        rule: simplifyRule,
-        solution: {
-          steps: [
-            { latex, note: L("Twee wortels keer elkaar: één wortel.", "Two roots multiplied: one root.") },
-            { latex: `\\sqrt{\\ask{${n}}}`, note: L(`$${p}\\cdot ${q}=${n}$.`, `$${p}\\cdot ${q}=${n}$.`) },
-            ...simplifySteps(n, k, b).slice(1),
-          ],
-        },
-      },
-    };
+    // √p·√q = √(pq), then simplify. p and q are chosen so pq = k²·b and
+    // neither is a square number (√2·√16 would be too easy). √8 has no such
+    // split, so pick k and b again until one exists.
+    const splits = (m: number) => [...Array(m).keys()].slice(2).filter((d) => m % d === 0 && d * d < m && perfectRoot(d) === null && perfectRoot(m / d) === null);
+    let [k3, b3] = [k, b];
+    while (splits(k3 * k3 * b3).length === 0) [k3, b3] = [rng.int(2, 5), rng.pick(SQUARE_FREE)];
+    return productOfRoots(rng, k3, b3, prompt, multi, splits(k3 * k3 * b3));
   },
   verify(ex) {
     // Independent check: a√b and the printed expression have the same value,
@@ -620,3 +616,39 @@ export const simplifyRoot: Generator = {
     return l !== null && r !== null && Math.abs(l - r) < 1e-9 && squareFree;
   },
 };
+
+/** √p·√q with pq = k²·b, simplified to k√b (difficulty 3). */
+function productOfRoots(
+  rng: Rng,
+  k: number,
+  b: number,
+  prompt: Loc,
+  multi: (coef: number, under: number) => AnswerSpec,
+  divisors: number[],
+): GeneratedExercise {
+  const n = k * k * b;
+  const p = rng.pick(divisors);
+  const q = n / p;
+  const latex = `\\sqrt{${p}}\\cdot\\sqrt{${q}}`;
+  return {
+    prompt,
+    latex,
+    visual: squareFactor(n),
+    answer: multi(k, b),
+    calculator: "off",
+    hints: {
+      nudge: L(
+        `Zet alles onder één wortel: $\\sqrt{${p}\\cdot ${q}}=\\sqrt{${n}}$. Vereenvoudig dan.`,
+        `Put everything under one root: $\\sqrt{${p}\\cdot ${q}}=\\sqrt{${n}}$. Then simplify.`,
+      ),
+      rule: simplifyRule,
+      solution: {
+        steps: [
+          { latex, note: L("Twee wortels keer elkaar: één wortel.", "Two roots multiplied: one root.") },
+          { latex: `\\sqrt{\\ask{${n}}}`, note: L(`$${p}\\cdot ${q}=${n}$.`, `$${p}\\cdot ${q}=${n}$.`) },
+          ...simplifySteps(n, k, b).slice(1),
+        ],
+      },
+    },
+  };
+}

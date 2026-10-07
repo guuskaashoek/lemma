@@ -20,6 +20,20 @@ const BASES = ["a", "x", "p", "2", "3", "5", "10"];
 const LETTERS = ["a", "b", "x", "y"];
 
 const pw = (base: string, n: number | string) => `${base}^{${n}}`;
+/** Like `pw`, but a bare letter for exponent 1: `x` instead of `x^{1}`. */
+const pw1 = (base: string, n: number) => (n === 1 ? base : pw(base, n));
+
+/**
+ * Two exponents where the typical mistake gives a different answer.
+ * With 2 and 2, adding and multiplying both give 4, so the mistake
+ * "multiplied instead of added" (or the other way round) cannot be seen.
+ */
+function pair(rng: Rng, lo1: number, hi1: number, lo2: number, hi2: number): [number, number] {
+  for (;;) {
+    const [p, q] = [rng.int(lo1, hi1), rng.int(lo2, hi2)];
+    if (!(p === 2 && q === 2)) return [p, q];
+  }
+}
 
 /** The factor-chain widget. Tokens are single letters or numbers. */
 export function chain(props: Record<string, unknown>, describe: Loc): VisualSpec {
@@ -140,8 +154,7 @@ function combined(rng: Rng, base: string) {
   const t = rng.int(0, 2);
   if (t === 0) {
     // a^p · a^q / a^r
-    const p = rng.int(2, 6);
-    const q = rng.int(2, 6);
+    const [p, q] = pair(rng, 2, 6, 2, 6);
     const r = rng.int(1, p + q - 1);
     const latex = `\\frac{${pw(base, p)}\\cdot ${pw(base, q)}}{${pw(base, r)}}`;
     const n = p + q - r;
@@ -169,8 +182,7 @@ function combined(rng: Rng, base: string) {
   }
   if (t === 1) {
     // (a^p)^q · a^r
-    const p = rng.int(2, 4);
-    const q = rng.int(2, 4);
+    const [p, q] = pair(rng, 2, 4, 2, 4);
     const r = rng.int(1, 6);
     const latex = `(${pw(base, p)})^{${q}}\\cdot ${pw(base, r)}`;
     const n = p * q + r;
@@ -197,8 +209,7 @@ function combined(rng: Rng, base: string) {
     };
   }
   // a^r · (a^p)^q / a^s
-  const p = rng.int(2, 3);
-  const q = rng.int(2, 4);
+  const [p, q] = pair(rng, 2, 3, 2, 4);
   const r = rng.int(1, 5);
   const s = rng.int(1, p * q + r - 1);
   const latex = `\\frac{${pw(base, r)}\\cdot(${pw(base, p)})^{${q}}}{${pw(base, s)}}`;
@@ -237,13 +248,19 @@ export const powerRule: Generator = {
   generate(rng, difficulty) {
     const base = rng.pick(BASES);
     let b;
-    if (difficulty === 1) b = single("product", base, rng.int(2, 7), rng.int(2, 7));
+    if (difficulty === 1) b = single("product", base, ...pair(rng, 2, 7, 2, 7));
     else if (difficulty === 2) {
       const kind = rng.pick(["product", "quotient", "power"] as const);
       if (kind === "quotient") {
-        const q = rng.int(2, 6);
-        b = single(kind, base, q + rng.int(1, 6), q);
-      } else if (kind === "power") b = single(kind, base, rng.int(2, 5), rng.int(2, 4));
+        // Not 4 and 2: then 4 : 2 and 4 − 2 are both 2.
+        let q = rng.int(2, 6);
+        let p = q + rng.int(1, 6);
+        while (p * (q - 1) === q * q) {
+          q = rng.int(2, 6);
+          p = q + rng.int(1, 6);
+        }
+        b = single(kind, base, p, q);
+      } else if (kind === "power") b = single(kind, base, ...pair(rng, 2, 5, 2, 4));
       else b = single(kind, base, rng.int(3, 9), rng.int(3, 9));
     } else b = combined(rng, base);
     const latex = `${b.latex}=${pw(base, "\\square")}`;
@@ -282,45 +299,61 @@ export const productPower: Generator = {
     const v = rng.pick(LETTERS);
     let c: number, p: number, n: number;
     let extra: { k: number; r: number } | null = null;
-    if (difficulty === 1) {
-      c = rng.int(2, 6);
-      p = rng.int(1, 2);
-      n = rng.int(2, c <= 3 ? 4 : 3);
-    } else if (difficulty === 2) {
-      c = rng.int(2, 5) * (rng.chance(0.4) ? -1 : 1);
-      p = rng.int(2, 4);
-      n = rng.int(2, 3);
-    } else {
-      c = rng.int(2, 4) * (rng.chance(0.5) ? -1 : 1);
-      p = rng.int(1, 3);
-      n = rng.int(2, 3);
-      extra = { k: rng.int(2, 5), r: rng.int(1, 4) };
-    }
-    const inner = `${c}${p === 1 ? v : pw(v, p)}`;
-    const latex = `(${inner})^{${n}}${extra ? `\\cdot ${extra.k}${pw(v, extra.r)}` : ""}`;
+    // Not c = 2 with n = 2 (then 2^2 = 2·2 and "not 2·2" would be false),
+    // and not p = 2 with n = 2 (then multiplying and adding exponents agree).
+    do {
+      if (difficulty === 1) {
+        c = rng.int(2, 6);
+        p = rng.int(1, 2);
+        n = rng.int(2, c <= 3 ? 4 : 3);
+      } else if (difficulty === 2) {
+        c = rng.int(2, 5) * (rng.chance(0.4) ? -1 : 1);
+        p = rng.int(2, 4);
+        n = rng.int(2, 3);
+      } else {
+        c = rng.int(2, 4) * (rng.chance(0.5) ? -1 : 1);
+        p = rng.int(1, 3);
+        n = rng.int(2, 3);
+        extra = { k: rng.int(2, 5), r: rng.int(1, 4) };
+      }
+    } while ((Math.abs(c) === 2 && n === 2) || (p === 2 && n === 2));
+    const vp = pw1(v, p);
+    const inner = `${c}${vp}`;
+    const tail = extra ? `\\cdot ${extra.k}${pw1(v, extra.r)}` : "";
+    const latex = `(${inner})^{${n}}${tail}`;
     const cn = c ** n;
     const coef = cn * (extra?.k ?? 1);
     const e = p * n + (extra?.r ?? 0);
     const cl = c < 0 ? `(${c})` : String(c);
+    // The letter part to the power n: (x^p)^n, or just x^n when p = 1.
+    const letterPow = p === 1 ? pw(v, n) : `(${vp})^{${n}}`;
     const steps: Step[] = [
-      { latex, note: L(`Binnen de haakjes staan twee factoren: $${c}$ en $${p === 1 ? v : pw(v, p)}$.`, `Inside the brackets there are two factors: $${c}$ and $${p === 1 ? v : pw(v, p)}$.`) },
+      { latex, note: L(`Binnen de haakjes staan twee factoren: $${c}$ en $${vp}$.`, `Inside the brackets there are two factors: $${c}$ and $${vp}$.`) },
       {
-        latex: `\\hl{${cl}^{${n}}}\\cdot\\hl{(${pw(v, p)})^{${n}}}${extra ? `\\cdot ${extra.k}${pw(v, extra.r)}` : ""}`,
+        latex: `\\hl{${cl}^{${n}}}\\cdot \\hl{${letterPow}}${tail}`,
         note: L(`Elke factor krijgt de macht $${n}$.`, `Every factor gets the power $${n}$.`),
       },
       {
-        latex: `\\ask{${cn}}\\cdot(${pw(v, p)})^{${n}}${extra ? `\\cdot ${extra.k}${pw(v, extra.r)}` : ""}`,
+        latex: `\\ask{${cn}}\\cdot ${letterPow}${tail}`,
         note: L(`$${cl}^{${n}}=${cn}$.`, `$${cl}^{${n}}=${cn}$.`),
       },
-      {
-        latex: `${cn}${pw(v, `\\ask{${p * n}}`)}${extra ? `\\cdot ${extra.k}${pw(v, extra.r)}` : ""}`,
-        note: L(`Macht van een macht: $${p}\\cdot ${n}=${p * n}$.`, `Power of a power: $${p}\\cdot ${n}=${p * n}$.`),
-      },
     ];
+    if (p > 1) {
+      steps.push({
+        latex: `${cn}${pw(v, `\\ask{${p * n}}`)}${tail}`,
+        note: L(`Macht van een macht: $${p}\\cdot ${n}=${p * n}$.`, `Power of a power: $${p}\\cdot ${n}=${p * n}$.`),
+      });
+    }
     if (extra) {
       steps.push(
-        { latex: `\\ask{${coef}}\\cdot ${pw(v, p * n)}\\cdot ${pw(v, extra.r)}`, note: L(`Getallen keer elkaar: $${cn}\\cdot ${extra.k}=${coef}$.`, `Numbers multiplied: $${cn}\\cdot ${extra.k}=${coef}$.`) },
-        { latex: `${coef}${pw(v, `\\ask{${e}}`)}`, note: L(`Letters: tel de exponenten op, $${p * n}+${extra.r}=${e}$.`, `Letters: add the exponents, $${p * n}+${extra.r}=${e}$.`) },
+        { latex: `\\ask{${coef}}\\cdot ${pw(v, p * n)}\\cdot ${pw1(v, extra.r)}`, note: L(`Getallen keer elkaar: $${cn}\\cdot ${extra.k}=${coef}$.`, `Numbers multiplied: $${cn}\\cdot ${extra.k}=${coef}$.`) },
+        {
+          latex: `${coef}${pw(v, `\\ask{${e}}`)}`,
+          note: L(
+            `Zelfde grondtal: tel de exponenten op, $${p * n}+${extra.r}=${e}$.${extra.r === 1 ? ` Een losse $${v}$ is $${v}^{1}$.` : ""}`,
+            `Same base: add the exponents, $${p * n}+${extra.r}=${e}$.${extra.r === 1 ? ` A single $${v}$ is $${v}^{1}$.` : ""}`,
+          ),
+        },
       );
     }
     return {
@@ -422,8 +455,12 @@ export const negativeExponent: Generator = {
       steps = [
         { latex, note: L("Zelfde grondtal, keer: tel de exponenten op.", "Same base, multiply: add the exponents.") },
         { latex: `${a}^{\\ask{${-n}}}`, note: L(`$${p}+(${q})=${-n}$.`, `$${p}+(${q})=${-n}$.`) },
-        { latex: `\\frac{1}{${a}^{${n}}}`, note: L("Een min in de exponent: één gedeeld door.", "A minus in the exponent: one divided by.") },
-        { latex: `\\frac{1}{\\ask{${a ** n}}}`, note: L(`$${a}^{${n}}=${a ** n}$.`, `$${a}^{${n}}=${a ** n}$.`) },
+        ...(n > 1
+          ? [
+              { latex: `\\frac{1}{${a}^{${n}}}`, note: L("Een min in de exponent: één gedeeld door.", "A minus in the exponent: one divided by.") },
+              { latex: `\\frac{1}{\\ask{${a ** n}}}`, note: L(`$${a}^{${n}}=${a ** n}$.`, `$${a}^{${n}}=${a ** n}$.`) },
+            ]
+          : [{ latex: `\\frac{1}{\\ask{${a}}}`, note: L("Een min in de exponent: één gedeeld door.", "A minus in the exponent: one divided by.") }]),
       ];
       nudge = L(
         `Tel eerst de exponenten op: $${p}+(${q})$. Wat betekent een negatieve exponent?`,
@@ -440,7 +477,8 @@ export const negativeExponent: Generator = {
       if (difficulty === 1) [a, n] = [rng.int(2, 20), 1];
       else {
         a = rng.int(2, 12);
-        const maxN = a === 2 ? 9 : a === 3 ? 6 : a <= 5 ? 4 : a <= 10 ? 3 : 2;
+        // Keep a^n something you can work out by hand.
+        const maxN = a === 2 ? 7 : a === 3 ? 4 : a <= 5 ? 3 : a === 10 ? 3 : 2;
         n = rng.int(2, maxN);
         if (a <= 5 && n <= 3 && rng.chance(0.25)) a = -a;
       }
@@ -500,8 +538,9 @@ export const negativeExponent: Generator = {
         const a = rng.pick([2, 3, 4, 5, 10]);
         const n = a === 2 ? rng.int(1, 4) : rng.int(1, 2);
         let c: number;
+        // c and a share no factor, so c/a^n is already in lowest terms.
         do c = rng.int(2, 9);
-        while (c % a === 0);
+        while (gcd(c, a) !== 1);
         latex = `${c}\\cdot ${a}^{-${n}}`;
         value = new Fraction(c, a ** n);
         steps = [

@@ -45,7 +45,7 @@ const skills: Skill[] = [
   skill("u1.add-subtract", ["Plus en min met negatieve getallen", "Adding and subtracting negatives"], "u1.minus-minus", ["u1.number-line", "u1.minus-minus"], ["u1.add-subtract"]),
   skill("u1.multiply-divide", ["Keer en delen met negatieve getallen", "Multiplying and dividing negatives"], "u1.multiply-negatives", ["u1.sign-rule"], ["u1.multiply-divide"]),
   skill("u1.powers", ["Machten uitrekenen", "Working out powers"], "u1.powers", ["u1.power", "u1.power-brackets"], ["u1.power-value"]),
-  skill("u1.square-roots", ["Wortels uitrekenen", "Working out roots"], "u1.square-roots", ["u1.square-root"], ["u1.square-root"]),
+  skill("u1.square-roots", ["Wortels uitrekenen", "Working out roots"], "u1.square-roots", ["u1.square-root", "u1.cube-root"], ["u1.square-root"]),
   skill("u1.root-estimate", ["Wortels schatten", "Estimating roots"], "u1.square-roots", ["u1.square-root"], ["u1.root-estimate"]),
   skill("u1.simplify-roots", ["Wortels vereenvoudigen", "Simplifying roots"], "u1.simplify-roots", ["u1.simplify-root"], ["u1.simplify-root"]),
   skill("u1.power-rules", ["Rekenregels voor machten", "Rules for powers"], "u1.power-rules", ["u1.product-rule", "u1.quotient-rule", "u1.power-of-power"], ["u1.power-rule"]),

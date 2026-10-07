@@ -169,8 +169,8 @@ export const scientificSmallLesson: Lesson = {
       kind: "explain",
       title: L("Groot of klein?", "Big or small?"),
       body: L(
-        "Positieve exponent: een groot getal, groter dan $10$.\nNegatieve exponent: een klein getal, kleiner dan $1$.\nVergelijken? Kijk eerst naar de exponent. $2\\cdot 10^{-3}$ is groter dan $9\\cdot 10^{-4}$.",
-        "Positive exponent: a big number, bigger than $10$.\nNegative exponent: a small number, smaller than $1$.\nComparing? Look at the exponent first. $2\\cdot 10^{-3}$ is bigger than $9\\cdot 10^{-4}$.",
+        "Positieve exponent: een groot getal, $10$ of meer.\nNegatieve exponent: een klein getal, kleiner dan $1$.\nVergelijken? Kijk eerst naar de exponent. $2\\cdot 10^{-3}$ is groter dan $9\\cdot 10^{-4}$.",
+        "Positive exponent: a big number, $10$ or more.\nNegative exponent: a small number, smaller than $1$.\nComparing? Look at the exponent first. $2\\cdot 10^{-3}$ is bigger than $9\\cdot 10^{-4}$.",
       ),
       latex: "9\\cdot 10^{-4}<2\\cdot 10^{-3}",
     },
@@ -209,6 +209,20 @@ export const scientificSmallLesson: Lesson = {
         ],
       },
     },
+    {
+      kind: "example",
+      title: L("Voorbeeld: te klein ervoor", "Example: too small in front"),
+      problem: L("Bereken $\\frac{3\\cdot 10^{8}}{6\\cdot 10^{2}}$.", "Work out $\\frac{3\\cdot 10^{8}}{6\\cdot 10^{2}}$."),
+      solution: {
+        steps: [
+          { latex: "\\frac{3\\cdot 10^{8}}{6\\cdot 10^{2}}", note: L("Getallen apart delen, machten apart delen.", "Divide the numbers and the powers separately.") },
+          { latex: "\\hl{\\frac{3}{6}}\\cdot\\hl{\\frac{10^{8}}{10^{2}}}", note: L("Splits in twee breuken.", "Split into two fractions.") },
+          { latex: "\\ask{0.5}\\cdot 10^{6}", note: L("$3:6=0.5$ en $8-2=6$.", "$3:6=0.5$ and $8-2=6$.") },
+          { latex: "\\ask{5}\\cdot 10^{-1}\\cdot 10^{6}", note: L("$0.5$ is te klein: vóór de komma staat $0$. Komma één naar rechts: $0.5=5\\cdot 10^{-1}$.", "$0.5$ is too small: there is a $0$ before the point. Point one place right: $0.5=5\\cdot 10^{-1}$.") },
+          { latex: "5\\cdot 10^{\\ask{5}}", note: L("Tel de exponenten op: $-1+6=5$.", "Add the exponents: $-1+6=5$.") },
+        ],
+      },
+    },
   ],
   practice: [
     { generatorId: "u1.to-scientific", difficulty: 2, count: 2 },
@@ -217,5 +231,6 @@ export const scientificSmallLesson: Lesson = {
     { generatorId: "u1.to-scientific", difficulty: 3, count: 1 },
     { generatorId: "u1.from-scientific", difficulty: 3, count: 1 },
     { generatorId: "u1.sci-calc", difficulty: 2, count: 1 },
+    { generatorId: "u1.sci-calc", difficulty: 3, count: 1 },
   ],
 };

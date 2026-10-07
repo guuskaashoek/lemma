@@ -106,6 +106,7 @@ export const powersLesson: Lesson = {
       ),
       latex: "(-3)^{2}=9\\qquad -3^{2}=-9",
       ruleId: "u1.power-brackets",
+      mnemonic: "hmwvdoa",
     },
     {
       kind: "example",

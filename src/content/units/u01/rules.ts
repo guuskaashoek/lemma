@@ -123,6 +123,24 @@ export const rules: RuleCard[] = [
     },
   },
   {
+    id: "u1.cube-root",
+    name: L("Derdemachtswortel", "Cube root"),
+    statement: L(
+      "$\\sqrt[3]{a}$ is het getal dat drie keer met zichzelf vermenigvuldigd $a$ geeft. Denk aan een kubus: de ribbe. Deze mag wel negatief zijn.",
+      "$\\sqrt[3]{a}$ is the number that, multiplied by itself three times, gives $a$. Think of a cube: the edge. This one may be negative.",
+    ),
+    latex: "(-2)^{3}=-8\\ \\Rightarrow\\ \\sqrt[3]{-8}=-2",
+    lessonId: "u1.square-roots",
+    example: {
+      problem: L("Bereken $\\sqrt[3]{-8}$.", "Work out $\\sqrt[3]{-8}$."),
+      steps: [
+        { latex: "\\sqrt[3]{-8}", note: L("Welk getal drie keer met zichzelf is $-8$?", "Which number times itself three times is $-8$?") },
+        { latex: "\\sqrt[3]{\\hl{(-2)\\cdot(-2)\\cdot(-2)}}", note: L("$(-2)\\cdot(-2)\\cdot(-2)=-8$. Drie mintekens: min.", "$(-2)\\cdot(-2)\\cdot(-2)=-8$. Three minus signs: minus.") },
+        { latex: "\\hl{-2}", note: L("Dus $\\sqrt[3]{-8}=-2$.", "So $\\sqrt[3]{-8}=-2$.") },
+      ],
+    },
+  },
+  {
     id: "u1.simplify-root",
     name: L("Wortel vereenvoudigen", "Simplifying a root"),
     statement: L(
