@@ -152,6 +152,13 @@ describe("relation and multi answers", () => {
     expect(checkAnswer(spec, { kind: "relation", latex: "3" })).toMatchObject({ reason: "invalid" });
   });
 
+  it("recognises a typical inequality mistake", () => {
+    const spec = { kind: "relation" as const, latex: "x>-3", points: [{ x: -3 }] };
+    const noFlip = { id: "no-flip", latex: "x<-3", explain: { nl: "Teken omklappen!", en: "Flip the sign!" } };
+    const r = checkAnswer(spec, { kind: "relation", latex: "-3>x" }, [noFlip]);
+    expect(r).toMatchObject({ correct: false, reason: "mistake", mistake: { id: "no-flip" } });
+  });
+
   it("accepts an equivalent equation of a line", () => {
     const spec = { kind: "relation" as const, latex: "y=2x+1" };
     expect(checkAnswer(spec, { kind: "relation", latex: "y-1=2x" }).correct).toBe(true);

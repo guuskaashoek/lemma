@@ -216,6 +216,14 @@ export function checkAnswer(
       if (r.correct) return { correct: false, reason: "mistake", mistake: m };
     }
   }
+  if (submission.kind === "relation" && spec.kind === "relation") {
+    // Same truth values (at random points and the boundary) as the mistake?
+    for (const m of mistakes) {
+      if (isRelation(m.latex) && validateSteps([m.latex, submission.latex], { points: spec.points }).ok) {
+        return { correct: false, reason: "mistake", mistake: m };
+      }
+    }
+  }
   if (submission.kind === "solutions" && spec.kind === "solutions" && submission.latex.length === 1) {
     for (const m of mistakes) {
       const r = checkExpr({ latex: m.latex }, submission.latex[0], spec.variable);
