@@ -8,11 +8,11 @@ What is built, what is left, and how to run the next batch of units.
 |---|---|---|
 | 0 | Opfrissen | ✅ Built, reviewed and merged into `main` (10 lessons, 23 generators, 12 unit widgets) |
 | 1 | Fundament | ✅ Built, reviewed, merged and pushed (live) — 10 lessons |
-| 2 | Algebra | 🔄 Being finished and reviewed (worktree `-5`, run `wf_2adc875c-8a3`) |
+| 2 | Algebra | ✅ Built, reviewed and merged into local `main` (not pushed yet) — 9 lessons |
 | 3 | Lineaire functies | ✅ Built, reviewed and merged into local `main` (not pushed yet) — 9 lessons |
-| 4 | Kwadratische functies | 🔄 Being finished and reviewed (worktree `-7`, run `wf_2adc875c-8a3`) |
-| 5 | Exponentiële functies en logaritmen | ⏸ Half built, uncommitted, in worktree `-8` (4 lessons, needs at least 5) |
-| 6 | Goniometrie | ⏸ Half built, uncommitted, in worktree `-9` (8 lessons) |
+| 4 | Kwadratische functies | ✅ Built, reviewed and merged into local `main` (not pushed yet) — 7 lessons |
+| 5 | Exponentiële functies en logaritmen | 🔄 Being finished and reviewed (worktree `-8`, run `wf_4e5b83d3-a77`) |
+| 6 | Goniometrie | 🔄 Being finished and reviewed (worktree `-9`, run `wf_4e5b83d3-a77`) |
 | 7 | Differentiëren | ⏳ To do |
 | 8 | Integreren | ⏳ To do |
 | 9 | Vectoren en lineaire algebra | ⏳ To do |
