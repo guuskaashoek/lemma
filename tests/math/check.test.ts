@@ -142,3 +142,32 @@ describe("solutions and mistakes", () => {
     expect(checkAnswer(spec, { kind: "solutions", latex: [], noSolution: true }).correct).toBe(false);
   });
 });
+
+describe("relation and multi answers", () => {
+  it("accepts equivalent inequalities and rejects the wrong boundary", () => {
+    const spec = { kind: "relation" as const, latex: "x<3", points: [{ x: 3 }] };
+    expect(checkAnswer(spec, { kind: "relation", latex: "3>x" }).correct).toBe(true);
+    expect(checkAnswer(spec, { kind: "relation", latex: "x\\le 3" }).correct).toBe(false);
+    expect(checkAnswer(spec, { kind: "relation", latex: "x>3" }).correct).toBe(false);
+    expect(checkAnswer(spec, { kind: "relation", latex: "3" })).toMatchObject({ reason: "invalid" });
+  });
+
+  it("accepts an equivalent equation of a line", () => {
+    const spec = { kind: "relation" as const, latex: "y=2x+1" };
+    expect(checkAnswer(spec, { kind: "relation", latex: "y-1=2x" }).correct).toBe(true);
+    expect(checkAnswer(spec, { kind: "relation", latex: "y=2x-1" }).correct).toBe(false);
+  });
+
+  it("checks every part of a multi answer", () => {
+    const spec = {
+      kind: "multi" as const,
+      parts: [
+        { label: "x=", answer: { latex: "2" } },
+        { label: "y=", answer: { latex: "\\frac{1}{2}" } },
+      ],
+    };
+    expect(checkAnswer(spec, { kind: "multi", latex: ["2", "0,5"] }).correct).toBe(true);
+    expect(checkAnswer(spec, { kind: "multi", latex: ["2", "3"] })).toMatchObject({ wrongParts: [1] });
+    expect(checkAnswer(spec, { kind: "multi", latex: ["", ""] })).toMatchObject({ reason: "empty" });
+  });
+});

@@ -115,6 +115,17 @@ export function perfectSubmission(spec: AnswerSpec): Submission {
         return { kind: "expr", latex: String(roundHalfAwayFromZero(evaluate(parse(spec.latex))!, spec.decimals ?? 2)) };
       }
       return { kind: "expr", latex: spec.latex };
+    case "relation":
+      return { kind: "relation", latex: spec.latex };
+    case "multi":
+      return {
+        kind: "multi",
+        latex: spec.parts.map((p) =>
+          p.answer.form === "decimal"
+            ? String(roundHalfAwayFromZero(evaluate(parse(p.answer.latex))!, p.answer.decimals ?? 2))
+            : p.answer.latex,
+        ),
+      };
   }
 }
 
@@ -132,6 +143,9 @@ export function finalStepMatches(sol: WorkedSolution, spec: AnswerSpec): boolean
     const given = (sol.solutions ?? []).map((s) => s[spec.variable]).sort((a, b) => a - b);
     const expected = spec.values.map((v) => evaluate(parse(v))!).sort((a, b) => a - b);
     return given.length === expected.length && given.every((g, i) => Math.abs(g - expected[i]) < 1e-9);
+  }
+  if (spec.kind === "relation") {
+    return validateSteps([last, spec.latex], { points: spec.points }).ok;
   }
   return true;
 }

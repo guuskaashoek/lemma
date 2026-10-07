@@ -12,6 +12,10 @@
  *   consecutive steps must have the same truth value at every test point.
  *   Test points are the known solutions plus random points, so a step that
  *   loses or invents a solution is caught.
+ *   For equations, random points almost never lie *on* the equation, so we
+ *   also search points on each equation (numerical root finding) and check
+ *   that they satisfy the neighbouring step, in both directions. That makes
+ *   `y=2x+1 → y=2x-1` fail, even without known solutions.
  */
 import { ce, closeEnough, equivalent, freeVariables, isInvalid, parse, type BoxedExpr, type MathJson } from "./cas";
 import { normalizeLatex } from "./normalize";
@@ -76,7 +80,71 @@ export type StepOptions = {
    * `[{ x: 2 }, { x: -3 }]`. Every equation step must hold at these points.
    */
   solutions?: Array<Record<string, number>>;
+  /**
+   * Extra test points where consecutive steps must agree (true or false),
+   * such as the boundary of an inequality: `x<3` and `x\le 3` only differ at 3.
+   */
+  points?: Array<Record<string, number>>;
 };
+
+/** `lhs - rhs` of a single equation, or null for anything else. */
+function equationDifference(json: MathJson): BoxedExpr | null {
+  if (!Array.isArray(json) || json[0] !== "Equal" || json.length !== 3) return null;
+  return ce().box(["Subtract", json[1], json[2]] as never);
+}
+
+/**
+ * Points on the equation `f = 0`: fix all variables but one at random values,
+ * then find a root in the last one by scanning for a sign change and
+ * bisecting. Points at jumps (like 1/x at 0) are discarded.
+ */
+function pointsOnEquation(f: BoxedExpr, vars: string[], seed: string, wanted = 6): Array<Record<string, number>> {
+  const rng = createRng(`roots:${seed}`);
+  const out: Array<Record<string, number>> = [];
+  if (vars.length === 0) return out;
+  const value = (p: Record<string, number>) => valueAt(f, p);
+  for (let attempt = 0; attempt < wanted * 4 && out.length < wanted; attempt++) {
+    const solveFor = vars[attempt % vars.length];
+    const base: Record<string, number> = {};
+    for (const v of vars) if (v !== solveFor) base[v] = Math.round(rng.sign() * (0.2 + rng.next() * 4.8) * 1e3) / 1e3;
+    // Scan [-20, 20] for sign changes.
+    let prevT = -20;
+    let prevV = value({ ...base, [solveFor]: prevT });
+    for (let i = 1; i <= 160 && out.length < wanted; i++) {
+      const t = -20 + (40 * i) / 160;
+      const v = value({ ...base, [solveFor]: t });
+      if (prevV !== null && v !== null && prevV * v <= 0) {
+        let lo = prevT;
+        let hi = t;
+        let flo = prevV;
+        for (let k = 0; k < 60; k++) {
+          const mid = (lo + hi) / 2;
+          const fm = value({ ...base, [solveFor]: mid });
+          if (fm === null) break;
+          if (flo * fm <= 0) hi = mid;
+          else {
+            lo = mid;
+            flo = fm;
+          }
+        }
+        const root = (lo + hi) / 2;
+        const fr = value({ ...base, [solveFor]: root });
+        if (fr !== null && Math.abs(fr) < 1e-7) out.push({ ...base, [solveFor]: root });
+        if (attempt % 2 === 0) break; // one root per line is enough on even attempts
+      }
+      prevT = t;
+      prevV = v;
+    }
+  }
+  return out;
+}
+
+/** Does the equation hold at a numerically found point (with a looser tolerance)? */
+function holdsNear(f: BoxedExpr, p: Record<string, number>): boolean | null {
+  const v = valueAt(f, p);
+  if (v === null) return null;
+  return Math.abs(v) <= 1e-6;
+}
 
 /** Checks that every step follows from the previous one. */
 export function validateSteps(steps: string[], opts: StepOptions = {}): StepCheck {
@@ -103,7 +171,7 @@ export function validateSteps(steps: string[], opts: StepOptions = {}): StepChec
 
   // Relations: compare truth values at known solutions and random points.
   const vars = [...new Set(parsed.flatMap((p) => freeVariables(p)))];
-  const points: Array<Record<string, number>> = [...(opts.solutions ?? [])];
+  const points: Array<Record<string, number>> = [...(opts.solutions ?? []), ...(opts.points ?? [])];
   const rng = createRng(`steps:${normalizeLatex(steps[0])}`);
   for (let k = 0; k < 24; k++) {
     const p: Record<string, number> = {};
@@ -119,6 +187,25 @@ export function validateSteps(steps: string[], opts: StepOptions = {}): StepChec
       }
     }
     if (i === 0) continue;
+    // Equations: points on one equation must lie on the other, both ways.
+    const fPrev = equationDifference(jsons[i - 1]);
+    const fCur = equationDifference(jsons[i]);
+    if (fPrev && fCur) {
+      for (const [from, to, label] of [
+        [fPrev, fCur, "previous"],
+        [fCur, fPrev, "next"],
+      ] as const) {
+        for (const p of pointsOnEquation(from, vars, `${steps[i]}|${label}`)) {
+          if (holdsNear(to, p) === false) {
+            return {
+              ok: false,
+              index: i,
+              reason: `a point on the ${label} step does not satisfy the other: ${JSON.stringify(p)}: ${steps[i - 1]} → ${steps[i]}`,
+            };
+          }
+        }
+      }
+    }
     for (const p of points) {
       const before = truthAt(jsons[i - 1], p);
       const after = truthAt(jsons[i], p);

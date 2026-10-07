@@ -32,6 +32,9 @@ import { StepList, stepsToText } from "./steps";
 import { HINT_EVENT, useCalculatorPolicy } from "./toolbox";
 import { Button } from "./ui";
 
+/** Milliseconds since `start` (kept outside the component: it is only called from event handlers). */
+const msSince = (start: number) => Date.now() - start;
+
 export type ExerciseResult = { correctFirstTry: boolean; hintsUsed: number; skillId: string };
 export type SessionMode = "lesson" | "review" | "final" | "testout";
 
@@ -92,9 +95,13 @@ export function ExerciseCard({
   const submission = (noSolution = false): Submission =>
     answer.kind === "expr"
       ? { kind: "expr", latex: exprRef.current }
-      : answer.kind === "solutions"
-        ? { kind: "solutions", latex: solsRef.current, noSolution }
-        : { kind: "choice", index: choice ?? -1 };
+      : answer.kind === "relation"
+        ? { kind: "relation", latex: exprRef.current }
+        : answer.kind === "multi"
+          ? { kind: "multi", latex: answer.parts.map((_, i) => solsRef.current[i] ?? "") }
+          : answer.kind === "solutions"
+            ? { kind: "solutions", latex: solsRef.current, noSolution }
+            : { kind: "choice", index: choice ?? -1 };
 
   const finish = useCallback(() => {
     if (hints > 0) void recordFinalHintsAction(contextId, exercise.generatorId, hints).catch(() => {});
@@ -118,7 +125,7 @@ export function ExerciseCard({
         skillId: exercise.skillId,
         correct: r.correct,
         hintsUsed: hints,
-        durationMs: Date.now() - started.current,
+        durationMs: msSince(started.current),
         mistakeId: !r.correct && r.reason === "mistake" ? (r.mistake?.id ?? null) : null,
         firstTry,
       }).catch(() => {});
@@ -150,7 +157,8 @@ export function ExerciseCard({
 
   const prompt = l(exercise.prompt);
   // Show the "x" button when the expected answer contains a letter.
-  const hasVariable = answer.kind === "expr" && /[a-z]/i.test(answer.latex.replace(/\\[a-z]+/gi, ""));
+  const hasVariable =
+    (answer.kind === "expr" || answer.kind === "relation") && /[a-z]/i.test(answer.latex.replace(/\\[a-z]+/gi, ""));
   const done = status !== "answering";
   const inputState = result ? (result.correct ? "good" : result.reason === "empty" || result.reason === "invalid" ? undefined : "bad") : undefined;
 
@@ -223,9 +231,35 @@ export function ExerciseCard({
 
       {/* Answer input */}
       <div className="space-y-3">
-        {answer.kind === "expr" && (
+        {answer.kind === "multi" && (
+          <div className="space-y-2">
+            {answer.parts.map((part, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <span className={`w-24 shrink-0 ${result && !result.correct && result.wrongParts?.includes(i) ? "text-bad" : "text-muted"}`}>
+                  <Formula latex={part.label} />
+                </span>
+                <div className="flex-1">
+                  <MathInput
+                    value={sols[i] ?? ""}
+                    onChange={(val) => setSols((s) => answer.parts.map((_, j) => (j === i ? val : (s[j] ?? ""))))}
+                    onEnter={() => (status === "answering" ? check() : finish())}
+                    autoFocus={i === 0}
+                    label={part.label}
+                    disabled={done}
+                    state={result ? (result.correct ? "good" : result.wrongParts?.includes(i) ? "bad" : undefined) : undefined}
+                    toolbar={i === answer.parts.length - 1}
+                    withVariable={/[a-z]/i.test(part.answer.latex.replace(/\\[a-z]+/gi, ""))}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {(answer.kind === "expr" || answer.kind === "relation") && (
           <div className="flex items-center gap-3">
             <div className="flex-1">
+              {answer.kind === "relation" && <p className="mb-1 text-sm text-muted">{t("relationTip")}</p>}
               <MathInput
                 key={exercise.seed}
                 value={expr}
@@ -238,7 +272,7 @@ export function ExerciseCard({
                 withVariable={hasVariable}
               />
             </div>
-            {answer.unit && <span className="text-lg">{answer.unit}</span>}
+            {answer.kind === "expr" && answer.unit && <span className="text-lg">{answer.unit}</span>}
           </div>
         )}
 
@@ -388,6 +422,15 @@ function answerLatex(exercise: Exercise): string {
       return v === null ? a.latex : String(roundHalfAwayFromZero(v, a.decimals ?? 2));
     }
     return a.latex;
+  }
+  if (a.kind === "relation") return a.latex;
+  if (a.kind === "multi") {
+    return a.parts
+      .map((p) => {
+        const v = p.answer.form === "decimal" ? evaluate(parse(p.answer.latex)) : null;
+        return `${p.label}${v === null ? p.answer.latex : roundHalfAwayFromZero(v, p.answer.decimals ?? 2)}`;
+      })
+      .join(",\\quad ");
   }
   if (a.kind === "solutions") {
     return a.values.length === 0 ? "\\emptyset" : a.values.map((v) => `${a.variable}=${v}`).join(" \\lor ");

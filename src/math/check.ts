@@ -28,6 +28,7 @@ import {
   unwrap,
 } from "./form";
 import { normalizeLatex } from "./normalize";
+import { isRelation, validateSteps } from "./steps";
 
 /**
  * The form an answer must have.
@@ -62,6 +63,26 @@ export type SolutionsAnswer = {
   decimals?: number;
 };
 
+/**
+ * An equation or inequality as the answer, e.g. `x<3` or `y=2x+1`.
+ * Correct when it has the same truth value as the expected one everywhere:
+ * `3>x` counts for `x<3`. `points` adds boundary points to compare at.
+ */
+export type RelationAnswer = {
+  kind: "relation";
+  latex: string;
+  points?: Array<Record<string, number>>;
+};
+
+/**
+ * Several answers at once, each with its own box and label, e.g. a system
+ * of equations (`x=` and `y=`), coordinates, or the entries of a vector.
+ */
+export type MultiAnswer = {
+  kind: "multi";
+  parts: Array<{ label: string; answer: Omit<ExprAnswer, "kind"> }>;
+};
+
 /** Multiple choice. */
 export type ChoiceAnswer = {
   kind: "choice";
@@ -69,13 +90,15 @@ export type ChoiceAnswer = {
   correctIndex: number;
 };
 
-export type AnswerSpec = ExprAnswer | SolutionsAnswer | ChoiceAnswer;
+export type AnswerSpec = ExprAnswer | SolutionsAnswer | ChoiceAnswer | RelationAnswer | MultiAnswer;
 
 /** What the learner submitted. */
 export type Submission =
   | { kind: "expr"; latex: string }
   | { kind: "solutions"; latex: string[]; noSolution?: boolean }
-  | { kind: "choice"; index: number };
+  | { kind: "choice"; index: number }
+  | { kind: "relation"; latex: string }
+  | { kind: "multi"; latex: string[] };
 
 /** A typical wrong answer with a targeted explanation. */
 export type Mistake = {
@@ -97,6 +120,8 @@ export type CheckResult =
       decimals?: number;
       /** For `mistake`: the recognised typical mistake. */
       mistake?: Mistake;
+      /** For `multi`: which parts are wrong (by index). */
+      wrongParts?: number[];
       /** Equivalent value but more decimals than asked, etc. */
       note?: "equivalent-but-form" | "too-many-decimals" | "missing-solution" | "extra-solution";
     };
@@ -202,6 +227,27 @@ export function checkAnswer(
 
 function checkCore(spec: AnswerSpec, submission: Submission): CheckResult {
   switch (spec.kind) {
+    case "relation": {
+      if (submission.kind !== "relation") return { correct: false, reason: "invalid" };
+      if (!NOT_EMPTY.test(submission.latex)) return { correct: false, reason: "empty" };
+      const given = parse(submission.latex);
+      if (isInvalid(given) || !isRelation(submission.latex)) return { correct: false, reason: "invalid" };
+      return validateSteps([spec.latex, submission.latex], { points: spec.points }).ok
+        ? { correct: true }
+        : { correct: false, reason: "value" };
+    }
+
+    case "multi": {
+      if (submission.kind !== "multi") return { correct: false, reason: "invalid" };
+      const results = spec.parts.map((p, i) => checkExpr(p.answer, submission.latex[i] ?? ""));
+      if (results.every((r) => r.correct)) return { correct: true };
+      if (results.every((r) => !r.correct && r.reason === "empty")) return { correct: false, reason: "empty" };
+      const wrongParts = results.flatMap((r, i) => (r.correct ? [] : [i]));
+      const form = results.find((r) => !r.correct && r.reason === "form");
+      if (form && !form.correct && wrongParts.length === 1) return { ...form, wrongParts };
+      return { correct: false, reason: "value", wrongParts };
+    }
+
     case "choice":
       if (submission.kind !== "choice") return { correct: false, reason: "invalid" };
       return submission.index === spec.correctIndex

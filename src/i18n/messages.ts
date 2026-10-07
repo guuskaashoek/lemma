@@ -358,6 +358,10 @@ export const messages = {
     nl: "Typ / voor een breuk en ^ voor een macht. Een komma mag.",
     en: "Type / for a fraction and ^ for a power.",
   },
+  relationTip: {
+    nl: "Typ de hele vergelijking of ongelijkheid, bijvoorbeeld x < 3 of y = 2x + 1.",
+    en: "Type the whole equation or inequality, for example x < 3 or y = 2x + 1.",
+  },
   sym_x: { nl: "De letter x", en: "The letter x" },
   sym_frac: { nl: "Breuk", en: "Fraction" },
   sym_pow: { nl: "Macht", en: "Power" },
