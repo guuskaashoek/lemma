@@ -7,10 +7,10 @@ What is built, what is left, and how to run the next batch of units.
 | Unit | Topic | Status |
 |---|---|---|
 | 0 | Opfrissen | ✅ Built, reviewed and merged into `main` (10 lessons, 23 generators, 12 unit widgets) |
-| 1 | Fundament | ⏸ Built and committed in worktree `-4` (9 lessons); review not done |
-| 2 | Algebra | ⏸ Half built, uncommitted, in worktree `-5` (6 lessons, incl. the reference lesson `u2.balance`) |
-| 3 | Lineaire functies | ⏸ Built and committed in worktree `-6` (9 lessons); review not done |
-| 4 | Kwadratische functies | ⏸ Half built, uncommitted, in worktree `-7` (5 lessons) |
+| 1 | Fundament | ✅ Built, reviewed, merged and pushed (live) — 10 lessons |
+| 2 | Algebra | 🔄 Being finished and reviewed (worktree `-5`, run `wf_2adc875c-8a3`) |
+| 3 | Lineaire functies | ✅ Built, reviewed and merged into local `main` (not pushed yet) — 9 lessons |
+| 4 | Kwadratische functies | 🔄 Being finished and reviewed (worktree `-7`, run `wf_2adc875c-8a3`) |
 | 5 | Exponentiële functies en logaritmen | ⏸ Half built, uncommitted, in worktree `-8` (4 lessons, needs at least 5) |
 | 6 | Goniometrie | ⏸ Half built, uncommitted, in worktree `-9` (8 lessons) |
 | 7 | Differentiëren | ⏳ To do |
@@ -32,7 +32,7 @@ These came up while building units 0–6. Units 7–12 depend on several of them
 
 1. **Always-visible exercise visual.** Today `Exercise.visual` only shows with hint 1, and `Figure` only knows `right-triangle`. Graph, table and vector questions need a picture in the question itself. Add a field such as `Exercise.questionVisual` and render it under the prompt.
 2. **Tables in LaTeX.** `colorize` (`src/math/markup.ts`) wraps the letters inside `\begin{array}` / `\end{array}`, which breaks KaTeX. Skip environment names (and `\begin{...}` arguments) in `colorize`, then add a test.
-3. **Slow step checker.** `pointsOnEquation` in `src/math/steps.ts` scans `[-20, 20]` and is very slow for equations with no root in that range, e.g. `tan(A°)=5/8 → A°=tan⁻¹(5/8)`; those tests hit the 60 s timeout.
+3. ~~**Slow step checker.**~~ Fixed (compiled evaluation and a 250 ms budget). `pointsOnEquation` in `src/math/steps.ts` scans `[-20, 20]` and is very slow for equations with no root in that range, e.g. `tan(A°)=5/8 → A°=tan⁻¹(5/8)`; those tests hit the 60 s timeout.
    - Cap the work per step.
    - Scan a range that fits the equation.
    - Stop early once enough points are found.
@@ -42,7 +42,8 @@ These came up while building units 0–6. Units 7–12 depend on several of them
    - The problem: `src/components/math.tsx` imports `@/content/rules`, which reads `BUNDLES` while a unit bundle is still loading. Unit widgets therefore cannot use `Formula`/`localizeDecimals`, and unit 0 copied them into `u00/widgets/kit.tsx`.
    - The fix: move `Formula`, `renderLatex` and `localizeDecimals` into a module without the rules import, and keep `Inline`/`RichText` (which need rule names) where they are.
 7. **Shared widget UI texts.** Unit widgets write button texts ("next step", "show me", "start over") as inline `Loc` objects. Make the shared `messages` keys usable from unit widgets, or document that inline `Loc` is the convention.
-8. Add the shared-change requests reported by the units 1–6 run here once it finishes, and fix them before units 7–12. Calculus (unit 7–8), vectors (9) and probability (10) are likely to need:
+8. **Typical mistakes for `multi` answers.** The mistake system only works for single answers, so multi-box answers get no targeted feedback (reported by unit 1).
+9. Add the shared-change requests reported by the units 1–6 run here once it finishes, and fix them before units 7–12. Calculus (unit 7–8), vectors (9) and probability (10) are likely to need:
    - plotting derivatives
    - area between `a` and `b`
    - vector arrows
