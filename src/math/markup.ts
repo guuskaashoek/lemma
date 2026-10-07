@@ -54,7 +54,8 @@ export function colorize(latex: string): string {
       const cmd = m ? m[0] : "\\";
       i += cmd.length;
 
-      if (cmd === "\\hl" && latex[i] === "{") {
+      // \ask{...} is a blank in guided solving; outside it, it looks like \hl.
+      if ((cmd === "\\hl" || cmd === "\\ask") && latex[i] === "{") {
         const end = closingBrace(latex, i);
         emitToken(wrap("m-hl", colorize(latex.slice(i + 1, end))));
         i = end + 1;
@@ -141,5 +142,6 @@ export const KATEX_OPTIONS = {
   macros: {
     // Unknown \hl outside colorize (e.g. in a raw render) just shows the content.
     "\\hl": "#1",
+    "\\ask": "#1",
   },
 };

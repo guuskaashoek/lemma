@@ -21,7 +21,9 @@ import { useT } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/messages";
 import { checkAnswer, roundHalfAwayFromZero, type CheckResult, type Submission } from "@/math/check";
 import { evaluate, parse } from "@/math/cas";
+import { Visual } from "@/visuals/visual";
 import { FigureView } from "./figures";
+import { GuidedSolver } from "./guided-solver";
 import { IconCheck, IconCross, IconHint, IconLock, IconPractice, IconRule } from "./icons";
 import { Formula, Inline, RichText } from "./math";
 import { MathInput } from "./math-input";
@@ -147,6 +149,8 @@ export function ExerciseCard({
   }, [isTest]);
 
   const prompt = l(exercise.prompt);
+  // Show the "x" button when the expected answer contains a letter.
+  const hasVariable = answer.kind === "expr" && /[a-z]/i.test(answer.latex.replace(/\\[a-z]+/gi, ""));
   const done = status !== "answering";
   const inputState = result ? (result.correct ? "good" : result.reason === "empty" || result.reason === "invalid" ? undefined : "bad") : undefined;
 
@@ -179,6 +183,44 @@ export function ExerciseCard({
         </div>
       )}
 
+      {/* Hint layers, right under the question so they are visible while answering. */}
+      {!isTest && hints > 0 && (
+        <div className="space-y-3">
+          <HintBox title={t("hint1")} speak={l(exercise.hints.nudge)}>
+            <RichText text={l(exercise.hints.nudge)} />
+            {exercise.visual && (
+              <div className="mt-4 rounded-lg border border-border bg-surface p-4">
+                <p className="mb-2 text-sm text-muted">{t("lookAtPicture")}</p>
+                <Visual spec={exercise.visual} />
+              </div>
+            )}
+          </HintBox>
+          {hints >= 2 && (
+            <HintBox title={t("hint2")}>
+              <RuleHint exercise={exercise} />
+            </HintBox>
+          )}
+          {hints >= 3 && status === "answering" && (
+            <HintBox title={`${t("hint3")} · ${t("solveTogether")}`}>
+              <p className="mb-3 text-muted">{t("solveTogetherIntro")}</p>
+              <GuidedSolver key={exercise.seed} solution={exercise.hints.solution} />
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm text-muted">{t("fullSolution")}</summary>
+                <div className="mt-2">
+                  <StepList steps={exercise.hints.solution.steps} shown={exercise.hints.solution.steps.length} />
+                </div>
+              </details>
+            </HintBox>
+          )}
+        </div>
+      )}
+      {/* After giving up (or a test), the whole worked solution. */}
+      {status === "revealed" && (
+        <HintBox title={t("hint3")} speak={stepsToText(exercise.hints.solution.steps, locale)}>
+          <StepList steps={exercise.hints.solution.steps} shown={exercise.hints.solution.steps.length} />
+        </HintBox>
+      )}
+
       {/* Answer input */}
       <div className="space-y-3">
         {answer.kind === "expr" && (
@@ -193,6 +235,7 @@ export function ExerciseCard({
                 label={t("yourAnswer")}
                 disabled={done}
                 state={inputState}
+                withVariable={hasVariable}
               />
             </div>
             {answer.unit && <span className="text-lg">{answer.unit}</span>}
@@ -287,33 +330,11 @@ export function ExerciseCard({
         {isTest && status === "answering" && <span className="text-sm text-muted">{t("testNoHints")}</span>}
       </div>
 
-      {/* Hint layers */}
-      {!isTest && hints > 0 && (
-        <div className="space-y-3">
-          <HintBox level={1} title={t("hint1")}>
-            <RichText text={l(exercise.hints.nudge)} />
-          </HintBox>
-          {hints >= 2 && (
-            <HintBox level={2} title={t("hint2")}>
-              <RuleHint exercise={exercise} />
-            </HintBox>
-          )}
-          {hints >= 3 && (
-            <HintBox
-              level={3}
-              title={t("hint3")}
-              speak={stepsToText(exercise.hints.solution.steps, locale)}
-            >
-              <StepList steps={exercise.hints.solution.steps} shown={exercise.hints.solution.steps.length} />
-            </HintBox>
-          )}
-        </div>
-      )}
     </div>
   );
 }
 
-function HintBox({ title, children, speak }: { level: number; title: string; children: React.ReactNode; speak?: string }) {
+function HintBox({ title, children, speak }: { title: string; children: React.ReactNode; speak?: string }) {
   return (
     <section className="animate-in rounded-xl border border-border p-4">
       <div className="mb-2 flex items-center justify-between gap-2">

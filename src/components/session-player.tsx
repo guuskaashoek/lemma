@@ -23,6 +23,7 @@ import { Formula, Inline, RichText } from "./math";
 import { SpeakButton } from "./speak-button";
 import { StepList, stepsToText } from "./steps";
 import { useCalculatorPolicy } from "./toolbox";
+import { Visual, describeVisual } from "@/visuals/visual";
 import { Button, ProgressBar } from "./ui";
 
 export type SessionItem = { generatorId: string; difficulty: Difficulty };
@@ -194,7 +195,9 @@ function ScreenView({
   const speakText =
     screen.kind === "explain"
       ? `${l(screen.title)}. ${l(screen.body)}${screen.latex ? ` $${screen.latex}$` : ""}`
-      : `${l(screen.title)}. ${l(screen.problem)} ${stepsToText(steps.slice(0, shown), locale)}`;
+      : screen.kind === "visual"
+        ? `${l(screen.title)}. ${l(screen.body)} ${describeVisual(screen.visual, locale)} ${screen.task ? l(screen.task) : ""}`
+        : `${l(screen.title)}. ${l(screen.problem)} ${stepsToText(steps.slice(0, shown), locale)}`;
 
   return (
     <div className="animate-in space-y-6">
@@ -205,8 +208,8 @@ function ScreenView({
       )}
       <div className="flex items-center justify-between gap-4">
         <span className="flex items-center gap-2 text-sm text-muted">
-          {screen.kind === "explain" ? <IconExplain width={18} height={18} /> : <IconExample width={18} height={18} />}
-          {screen.kind === "explain" ? t("explain") : t("example")}
+          {screen.kind === "example" ? <IconExample width={18} height={18} /> : <IconExplain width={18} height={18} />}
+          {screen.kind === "example" ? t("example") : t("explain")}
         </span>
         <SpeakButton primary text={speakText} />
       </div>
@@ -234,12 +237,41 @@ function ScreenView({
             </Link>
           )}
         </>
+      ) : screen.kind === "visual" ? (
+        <>
+          <RichText text={l(screen.body)} className="text-xl" />
+          <div className="rounded-xl border border-border bg-surface p-5">
+            <Visual spec={screen.visual} />
+          </div>
+          {screen.task && (
+            <p className="flex items-start gap-2 rounded-lg border border-border-strong px-4 py-3">
+              <strong className="shrink-0">{t("tryIt")}:</strong>
+              <span>
+                <Inline text={l(screen.task)} />
+              </span>
+            </p>
+          )}
+          {screen.metaphor && (
+            <p className="text-muted">
+              <strong>{l(METAPHORS[screen.metaphor].name)}:</strong> <Inline text={l(METAPHORS[screen.metaphor].short)} />
+            </p>
+          )}
+        </>
       ) : (
         <>
           <div className="text-xl">
             <RichText text={l(screen.problem)} />
           </div>
-          <StepList steps={steps} shown={shown} />
+          {screen.visual ? (
+            <div className="grid gap-5 lg:grid-cols-2">
+              <div className="rounded-xl border border-border bg-surface p-4">
+                <Visual spec={screen.visual} />
+              </div>
+              <StepList steps={steps} shown={shown} />
+            </div>
+          ) : (
+            <StepList steps={steps} shown={shown} />
+          )}
         </>
       )}
 

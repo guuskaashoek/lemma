@@ -35,7 +35,7 @@ export const MNEMONICS: Record<MnemonicId, Mnemonic> = {
         meaning: { nl: "Optellen en Aftrekken, van links naar rechts", en: "Add and subtract, left to right" },
       },
     ],
-    ruleId: "order-of-operations",
+    ruleId: "u0.order-of-operations",
   },
   soscastoa: {
     id: "soscastoa",
@@ -66,6 +66,6 @@ export const MNEMONICS: Record<MnemonicId, Mnemonic> = {
         },
       },
     ],
-    ruleId: "sos-cas-toa",
+    ruleId: "u0.sos-cas-toa",
   },
 };

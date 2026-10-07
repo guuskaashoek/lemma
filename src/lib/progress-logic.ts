@@ -73,6 +73,7 @@ export type RoadmapUnit = {
  *
  * - Unit 0 is always open.
  * - Unit n opens when unit n-1 is passed (final >= 80%) or skipped (test out >= 90%).
+ *   Units that are still "planned" (not built) are stepped over.
  * - Lessons inside an open unit open one after another.
  */
 export function buildRoadmap(
@@ -117,7 +118,8 @@ export function buildRoadmap(
       bestFinalScore: row?.bestFinalScore ?? 0,
       bestTestOutScore: row?.bestTestOutScore ?? 0,
     });
-    previousCleared = state === "passed" || state === "skipped";
+    // A unit that is not built yet never blocks the units after it.
+    if (unit.status !== "planned") previousCleared = state === "passed" || state === "skipped";
   }
   return result;
 }

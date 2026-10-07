@@ -13,6 +13,7 @@
 import type { Loc } from "@/i18n/locale";
 import type { AnswerSpec, Mistake } from "@/math/check";
 import type { Rng } from "@/math/random";
+import type { VisualSpec } from "@/visuals/types";
 
 export type { Loc };
 
@@ -23,6 +24,11 @@ export type MnemonicId = "hmwvdoa" | "soscastoa";
 
 /** One step of a worked solution: a formula plus a short explanation. */
 export type Step = {
+  /**
+   * The formula after this step. Mark what changed with `\\hl{...}`.
+   * Mark what the learner fills in during guided solving with `\\ask{...}`
+   * (at most one per step); outside guided mode it looks like `\\hl`.
+   */
   latex: string;
   note: Loc;
   /**
@@ -67,11 +73,23 @@ export type Screen =
       ruleId?: string;
     }
   | {
+      /** A visual, interactive explanation with a short text. */
+      kind: "visual";
+      title: Loc;
+      body: Loc;
+      visual: VisualSpec;
+      /** What to try with the visual, e.g. "Haal links en rechts 3 blokjes weg." */
+      task?: Loc;
+      metaphor?: MetaphorId;
+    }
+  | {
       kind: "example";
       title: Loc;
       /** The problem being worked out. */
       problem: Loc;
       solution: WorkedSolution;
+      /** Optional visual that follows the steps. */
+      visual?: VisualSpec;
     };
 
 /** A generated exercise, ready to show. */
@@ -85,13 +103,21 @@ export type Exercise = {
   /** Optional big formula shown under the question. */
   latex?: string;
   figure?: Figure;
+  /** Interactive picture of this exact exercise (shown with hint 1). */
+  visual?: VisualSpec;
   answer: AnswerSpec;
   hints: {
-    /** Hint 1: a small nudge in the right direction. */
+    /**
+     * Hint 1: a small nudge that uses the exercise's own numbers
+     * ("Links staat +3. Hoe krijg je die weg?"), never a generic sentence.
+     */
     nudge: Loc;
     /** Hint 2: which rule you need. */
     rule: { text: Loc; ruleId?: string; mnemonic?: MnemonicId; metaphor?: MetaphorId };
-    /** Hint 3: the full worked solution. */
+    /**
+     * Hint 3: the worked solution. The learner goes through it in
+     * "solve together" mode, filling in every `\\ask{...}` blank.
+     */
     solution: WorkedSolution;
   };
   /** Typical mistakes with targeted feedback. */
@@ -197,4 +223,22 @@ export type Skill = {
   ruleIds: string[];
   /** Generators that can produce review exercises for this skill. */
   generatorIds: string[];
+};
+
+/**
+ * Everything one unit contributes to the app. Each unit lives in its own
+ * folder (`src/content/units/uNN/`) and exports one bundle, so units can be
+ * written independently. All ids inside a bundle start with the unit prefix
+ * (`u4.`), so two units can never collide.
+ */
+export type UnitBundle = {
+  unit: Unit;
+  generators: Generator[];
+  skills: Skill[];
+  rules: RuleCard[];
+  /**
+   * Unit-specific widgets for `{ kind: "custom", widget: "u10.tree" }`
+   * visuals. Keys must start with the unit prefix.
+   */
+  widgets?: Record<string, import("react").ComponentType<{ props: Record<string, unknown> }>>;
 };

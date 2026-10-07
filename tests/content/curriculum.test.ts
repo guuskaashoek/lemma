@@ -9,7 +9,7 @@ import { METAPHORS } from "@/content/metaphors";
 import { MNEMONICS } from "@/content/mnemonics";
 import { RULES, getRule } from "@/content/rules";
 import type { Loc } from "@/i18n/locale";
-import { locProblems, renderOrThrow, workedSolutionProblems } from "../helpers/content";
+import { locProblems, renderOrThrow, visualProblems, workedSolutionProblems } from "../helpers/content";
 
 const lessons = UNITS.flatMap((u) => u.lessons);
 const generatorIds = new Set(GENERATORS.map((g) => g.id));
@@ -88,9 +88,14 @@ describe("lesson content", () => {
           const words = s.body[lang].split(/\s+/).length;
           if (words > 80) problems.push(`${where}: ${words} words in ${lang}, keep screens short`);
         }
+      } else if (s.kind === "visual") {
+        problems.push(...locProblems(s.body, `${where} body`));
+        if (s.task) problems.push(...locProblems(s.task, `${where} task`));
+        problems.push(...visualProblems(s.visual, where));
       } else {
         problems.push(...locProblems(s.problem, `${where} problem`));
         problems.push(...workedSolutionProblems(s.solution, where));
+        if (s.visual) problems.push(...visualProblems(s.visual, where));
       }
     });
 

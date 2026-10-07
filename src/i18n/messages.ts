@@ -248,10 +248,10 @@ export const messages = {
   },
   calcHistory: { nl: "Geschiedenis", en: "History" },
   calcHistoryEmpty: { nl: "Nog geen berekeningen.", en: "No calculations yet." },
-  calcExplain: { nl: "Uitleg bij de knoppen", en: "Explain the buttons" },
+  calcExplain: { nl: "Uitleg bij de knoppen tonen", en: "Show button explanations" },
   calcExplainHint: {
-    nl: "Ga met de muis over een knop, of zet uitleg aan en klik op een knop.",
-    en: "Hover over a button, or turn on explain mode and click a button.",
+    nl: "Ga met de muis over een knop of klik erop.",
+    en: "Hover over a button or click it.",
   },
   calcErrSyntax: { nl: "Deze som is niet compleet.", en: "This sum is not complete." },
   calcErrDivZero: { nl: "Delen door nul kan niet.", en: "You cannot divide by zero." },
@@ -352,6 +352,88 @@ export const messages = {
     en: "Are you sure? All data of this user will be deleted.",
   },
   never: { nl: "nooit", en: "never" },
+
+  // --- Answer input ---
+  typingTip: {
+    nl: "Typ / voor een breuk en ^ voor een macht. Een komma mag.",
+    en: "Type / for a fraction and ^ for a power.",
+  },
+  sym_x: { nl: "De letter x", en: "The letter x" },
+  sym_frac: { nl: "Breuk", en: "Fraction" },
+  sym_pow: { nl: "Macht", en: "Power" },
+  sym_sqrt: { nl: "Wortel", en: "Square root" },
+  sym_paren: { nl: "Haakjes", en: "Brackets" },
+  sym_minus: { nl: "Min", en: "Minus" },
+  sym_pi: { nl: "Pi", en: "Pi" },
+
+  // --- Guided solving ---
+  solveTogether: { nl: "Samen oplossen", en: "Solve together" },
+  solveTogetherIntro: {
+    nl: "We doen het stap voor stap. Jij vult steeds het lege vakje in.",
+    en: "We go step by step. You fill in the empty box each time.",
+  },
+  fillTheBox: { nl: "Wat komt er in het vakje?", en: "What goes in the box?" },
+  guidedWrong: { nl: "Nog niet. Lees de stap nog eens en probeer opnieuw.", en: "Not yet. Read the step again and try once more." },
+  guidedShown: { nl: "Geen probleem. Zo ziet het eruit.", en: "No problem. This is how it looks." },
+  guidedDone: {
+    nl: "Klaar! Vul het antwoord nu hierboven in.",
+    en: "Done! Now enter the answer above.",
+  },
+  fullSolution: { nl: "Hele uitwerking tonen", en: "Show the whole solution" },
+  lookAtPicture: { nl: "Bekijk het met het plaatje:", en: "Look at it with the picture:" },
+
+  // --- Visuals ---
+  showMe: { nl: "Laat zien", en: "Show me" },
+  startOver: { nl: "Opnieuw", en: "Start over" },
+  tryIt: { nl: "Probeer het zelf", en: "Try it yourself" },
+  balanceAria: { nl: "Balans met blokjes", en: "Balance with blocks" },
+  balanceIntro: {
+    nl: "Klik op een blokje om het weg te halen. Of gebruik de knoppen.",
+    en: "Click a block to take it away. Or use the buttons.",
+  },
+  balanceLevel: { nl: "De balans is weer recht. Goed!", en: "The balance is level again. Good!" },
+  balanceTippedRight: {
+    nl: "Scheef! Je haalde alleen links iets weg. Haal rechts hetzelfde weg.",
+    en: "Tipped! You only took something away on the left. Take the same away on the right.",
+  },
+  balanceTippedLeft: {
+    nl: "Scheef! Je haalde alleen rechts iets weg. Haal links hetzelfde weg.",
+    en: "Tipped! You only took something away on the right. Take the same away on the left.",
+  },
+  balanceRemoveX: { nl: "Haal een x-blokje weg", en: "Take an x-block away" },
+  balanceRemoveOne: { nl: "Haal een blokje weg", en: "Take a block away" },
+  balanceDone: { nl: "Klaar! Links staat één x. Rechts zie je wat x is.", en: "Done! One x on the left. The right shows what x is." },
+  numberLineAria: { nl: "Getallenlijn", en: "Number line" },
+  nextJump: { nl: "Volgende sprong", en: "Next jump" },
+  youAreAt: { nl: "Je staat op", en: "You are at" },
+  splitParts: { nl: "Splits elk stuk", en: "Split every part" },
+  splitNote: {
+    nl: "Het gekleurde deel blijft even groot. Alleen de stukjes worden kleiner.",
+    en: "The coloured part stays the same size. Only the pieces get smaller.",
+  },
+  areaAria: { nl: "Oppervlaktemodel", en: "Area model" },
+  nextPart: { nl: "Volgend vak", en: "Next part" },
+  planeAria: { nl: "Assenstelsel met grafiek", en: "Coordinate plane with graph" },
+  tracerAria: { nl: "Punt op de grafiek", en: "Point on the graph" },
+  tracerHelp: {
+    nl: "Sleep het punt, of gebruik de pijltjestoetsen.",
+    en: "Drag the point, or use the arrow keys.",
+  },
+  slopeHere: { nl: "helling hier:", en: "slope here:" },
+  triangleAria: { nl: "Rechthoekige driehoek", en: "Right triangle" },
+  triangleNote: {
+    nl: "Verander de hoek. De verhoudingen hangen alleen van de hoek af.",
+    en: "Change the angle. The ratios only depend on the angle.",
+  },
+  angle: { nl: "hoek", en: "angle" },
+  pythagorasAria: { nl: "Pythagoras met vierkanten", en: "Pythagoras with squares" },
+  unitCircleAria: { nl: "Eenheidscirkel", en: "Unit circle" },
+  unitCircleNote: {
+    nl: "De cosinus is hoe ver naar rechts. De sinus is hoe hoog.",
+    en: "The cosine is how far right. The sine is how high.",
+  },
+  machine: { nl: "machine", en: "machine" },
+  output: { nl: "uit", en: "out" },
 
   // --- Landing ---
   landingPoint1: { nl: "Korte lessen van 5 tot 10 minuten.", en: "Short lessons of 5 to 10 minutes." },

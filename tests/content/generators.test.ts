@@ -18,7 +18,9 @@ import {
   finalStepMatches,
   locProblems,
   perfectSubmission,
+  guidedProblems,
   renderOrThrow,
+  visualProblems,
   workedSolutionProblems,
 } from "../helpers/content";
 
@@ -60,6 +62,8 @@ describe.each(GENERATORS.map((g) => [g.id, g] as const))("generator %s", (id, ge
       }
 
       problems.push(...workedSolutionProblems(ex.hints.solution, `${where} solution`));
+      problems.push(...guidedProblems(ex.hints.solution, `${where} solution`));
+      if (ex.visual) problems.push(...visualProblems(ex.visual, `${where} visual`, ex.latex));
       if (!finalStepMatches(ex.hints.solution, ex.answer)) problems.push(`${where}: last step is not the answer`);
 
       problems.push(...locProblems(ex.prompt, `${where} prompt`));
