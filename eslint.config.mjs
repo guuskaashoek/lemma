@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Worktrees created by multi-agent workflows.
+    ".claude/**",
   ]),
 ]);
 
