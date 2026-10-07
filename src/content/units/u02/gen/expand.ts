@@ -118,8 +118,8 @@ export const expandSingle: Generator = {
         id: "only-first",
         latex: monosLatex([prods[0], r1]),
         explain: L(
-          `Je deed alleen $${outside}$ keer $${monoLatex(r0)}$. Ook $${monoLatex(r1)}$ moet keer $${outside}$: twee pijlen.`,
-          `You only did $${outside}$ times $${monoLatex(r0)}$. $${monoLatex(r1)}$ must be multiplied by $${outside}$ too: two arrows.`,
+          `Je deed alleen $${outside}$ keer $${monoLatex(r0)}$. Ook $${monoLatex(r1)}$ moet keer $${paren(outside)}$: twee pijlen.`,
+          `You only did $${outside}$ times $${monoLatex(r0)}$. $${monoLatex(r1)}$ must be multiplied by $${paren(outside)}$ too: two arrows.`,
         ),
       },
     ];
@@ -162,8 +162,8 @@ export const expandSingle: Generator = {
               `The minus in front of the brackets applies to both: $${monoLatex(r0)}$ and $${monoLatex(r1)}$. Turn both signs around.`,
             )
           : L(
-              `Doe $${outside}$ keer $${monoLatex(r0)}$, en ook $${outside}$ keer $${monoLatex(r1)}$.`,
-              `Do $${outside}$ times $${monoLatex(r0)}$, and also $${outside}$ times $${monoLatex(r1)}$.`,
+              `Doe $${outside}$ keer $${monoLatex(r0)}$, en ook $${outside}$ keer $${paren(monoLatex(r1))}$.`,
+              `Do $${outside}$ times $${monoLatex(r0)}$, and also $${outside}$ times $${paren(monoLatex(r1))}$.`,
             ),
         rule: {
           text: L(
@@ -261,15 +261,17 @@ export const expandDouble: Generator = {
               "You only did first times first and last times last. There are four arrows: four boxes.",
             ),
       },
-      {
+    ];
+    if (l1[0] < 0 || r1[0] < 0) {
+      mistakes.push({
         id: "last-sign",
         latex: monosLatex(collect([prods[0], prods[1], prods[2], [-prods[3][0], 0]])),
         explain: L(
-          `Kijk naar het teken van $${monoLatex(l1)}\\cdot ${paren(monoLatex(r1))}=${monoLatex(prods[3])}$.`,
-          `Look at the sign of $${monoLatex(l1)}\\cdot ${paren(monoLatex(r1))}=${monoLatex(prods[3])}$.`,
+          `Kijk naar het teken van $${paren(monoLatex(l1))}\\cdot ${paren(monoLatex(r1))}=${monoLatex(prods[3])}$.`,
+          `Look at the sign of $${paren(monoLatex(l1))}\\cdot ${paren(monoLatex(r1))}=${monoLatex(prods[3])}$.`,
         ),
-      },
-    ];
+      });
+    }
     if (l0[0] * r0[0] !== 1) {
       mistakes.push({
         id: "first-box",
@@ -289,8 +291,8 @@ export const expandDouble: Generator = {
       visual: { kind: "area-model", rows: left.map((m) => monoLatex(m)), cols: right.map((m) => monoLatex(m)) },
       hints: {
         nudge: L(
-          `Maak vier vakken: $${monoLatex(l0)}$ en $${monoLatex(l1)}$ gaan allebei keer $${monoLatex(r0)}$ en keer $${monoLatex(r1)}$.`,
-          `Make four boxes: $${monoLatex(l0)}$ and $${monoLatex(l1)}$ each go times $${monoLatex(r0)}$ and times $${monoLatex(r1)}$.`,
+          `Maak vier vakken: $${monoLatex(l0)}$ en $${monoLatex(l1)}$ gaan allebei keer $${monoLatex(r0)}$ en keer $${paren(monoLatex(r1))}$.`,
+          `Make four boxes: $${monoLatex(l0)}$ and $${monoLatex(l1)}$ each go times $${monoLatex(r0)}$ and times $${paren(monoLatex(r1))}$.`,
         ),
         rule: {
           text: L(

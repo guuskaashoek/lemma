@@ -36,7 +36,7 @@ const skill = (id: string, name: [string, string], lessonId: string, ruleIds: st
 
 const skills: Skill[] = [
   skill("u2.evaluate", ["Invullen", "Filling in"], "u2.variables", ["u2.variable"], ["u2.evaluate"]),
-  skill("u2.like-terms", ["Gelijke termen samennemen", "Combining like terms"], "u2.like-terms", ["u2.like-terms"], ["u2.like-terms"]),
+  skill("u2.like-terms", ["Gelijksoortige termen samennemen", "Combining like terms"], "u2.like-terms", ["u2.like-terms"], ["u2.like-terms"]),
   skill("u2.expand", ["Haakjes wegwerken", "Expanding brackets"], "u2.expand", ["u2.expand"], ["u2.expand-single"]),
   skill("u2.expand-double", ["Dubbele haakjes", "Double brackets"], "u2.expand-double", ["u2.expand-double"], ["u2.expand-double"]),
   skill("u2.linear-equations", ["Vergelijkingen oplossen", "Solving equations"], "u2.balance", ["u2.balance-method"], ["u2.linear-equation"]),

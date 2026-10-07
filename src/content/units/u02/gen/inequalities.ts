@@ -130,8 +130,8 @@ function ruleHint(flip: boolean) {
       }
     : {
         text: L(
-          "Los een ongelijkheid op zoals een vergelijking. Wat je links doet, doe je ook rechts. Het teken blijft staan.",
-          "Solve an inequality like an equation. Whatever you do on the left, you also do on the right. The sign stays.",
+          "Los een ongelijkheid op zoals een vergelijking. Wat je links doet, doe je ook rechts. Bij plus en min, en bij keer of delen door een positief getal, blijft het teken staan.",
+          "Solve an inequality like an equation. Whatever you do on the left, you also do on the right. Adding, subtracting, and multiplying or dividing by a positive number keep the sign.",
         ),
         ruleId: "u2.inequality",
       };
@@ -141,9 +141,14 @@ function ruleHint(flip: boolean) {
 function nudge(a: number, b: number, c: number, op: Rel): Loc {
   if (c !== 0) {
     const warn = a < 0;
+    const cx = term(Math.abs(c), "x");
+    const move =
+      c > 0
+        ? L(`Rechts staat $${cx}$. Haal links en rechts $${cx}$ weg.`, `The right has $${cx}$. Take $${cx}$ away on both sides.`)
+        : L(`Rechts staat $-${cx}$. Tel links en rechts $${cx}$ op.`, `The right has $-${cx}$. Add $${cx}$ on both sides.`);
     return L(
-      `Er staat aan beide kanten een $x$-term. Haal rechts $${term(c, "x")}$ weg, aan beide kanten. Het teken $${op}$ schrijf je over.${warn ? " Straks deel je door een negatief getal: let dan op het teken!" : ""}`,
-      `There is an $x$-term on both sides. Remove $${term(c, "x")}$ from the right, on both sides. Copy the sign $${op}$.${warn ? " Later you divide by a negative number: mind the sign then!" : ""}`,
+      `Er staat aan beide kanten een $x$-term. ${move.nl} Het teken $${op}$ schrijf je over.${warn ? " Straks deel je door een negatief getal: let dan op het teken!" : ""}`,
+      `There is an $x$-term on both sides. ${move.en} Copy the sign $${op}$.${warn ? " Later you divide by a negative number: mind the sign then!" : ""}`,
     );
   }
   if (b !== 0) {
@@ -173,10 +178,13 @@ function solveParts(rng: Rng, difficulty: Difficulty): [number, number, number, 
     const b = rng.nonZeroInt(-10, 10);
     return [a, b, 0, a * k + b, op, k];
   }
-  const c = rng.nonZeroInt(-3, 5);
-  const A = rng.int(1, 5);
-  const b = rng.int(-10, 10);
-  return [c + A, b, c, A * k + b, op, k];
+  // x on both sides: neither a nor c may be 0.
+  for (;;) {
+    const c = rng.nonZeroInt(-3, 5);
+    const A = rng.int(1, 5);
+    const b = rng.int(-10, 10);
+    if (c + A !== 0) return [c + A, b, c, A * k + b, op, k];
+  }
 }
 
 export const inequalitySolve: Generator = {
@@ -221,11 +229,14 @@ function flipParts(rng: Rng, difficulty: Difficulty): { a: number; b: number; c:
     const b = rng.nonZeroInt(-9, 9);
     return { a, b, c: 0, d: a * k + b, op, k, numberFirst: b > 0 && rng.chance() };
   }
-  const a = rng.int(-3, 4);
-  const A = -rng.int(1, 4);
-  const b = rng.int(-10, 10);
-  const c = a - A;
-  return { a, b, c, d: A * k + b, op, k, numberFirst: false };
+  // x on both sides: neither a nor c may be 0.
+  for (;;) {
+    const a = rng.nonZeroInt(-3, 4);
+    const A = -rng.int(1, 4);
+    const b = rng.int(-10, 10);
+    const c = a - A;
+    if (c !== 0) return { a, b, c, d: A * k + b, op, k, numberFirst: false };
+  }
 }
 
 export const inequalityFlip: Generator = {

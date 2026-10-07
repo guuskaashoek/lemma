@@ -71,8 +71,8 @@ export const inequalitiesLesson: Lesson = {
       kind: "explain",
       title: L("Oplossen als een vergelijking", "Solve like an equation"),
       body: L(
-        "Los een ongelijkheid op zoals een vergelijking.\nWat je links doet, doe je ook rechts.\nHet teken schrijf je elke regel over. Zie [[rule:u2.inequality]].",
-        "Solve an inequality like an equation.\nWhatever you do on the left, you also do on the right.\nCopy the sign on every line. See [[rule:u2.inequality]].",
+        "Los een ongelijkheid op zoals een vergelijking.\nWat je links doet, doe je ook rechts.\nBij plus en min, en bij keer of delen door een positief getal, blijft het teken staan. Schrijf het elke regel over. Zie [[rule:u2.inequality]].",
+        "Solve an inequality like an equation.\nWhatever you do on the left, you also do on the right.\nAdding, subtracting, and multiplying or dividing by a positive number keep the sign. Copy it on every line. See [[rule:u2.inequality]].",
       ),
       ruleId: "u2.inequality",
       metaphor: "balance",
@@ -142,8 +142,8 @@ export const flipLesson: Lesson = {
       kind: "visual",
       title: L("Waarom het omklapt", "Why it flips"),
       body: L(
-        "Links op de getallenlijn staat het kleinste getal.\nKeer een negatief getal spiegelt alles om de $0$.\nDan staat het grootste getal ineens links.",
-        "On the number line the smaller number is on the left.\nTimes a negative number mirrors everything around $0$.\nThen the larger number is suddenly on the left.",
+        "Links op de getallenlijn staat het kleinste getal.\nKeer $-1$ spiegelt alles om de $0$.\nDan staat het grootste getal ineens links.",
+        "On the number line the smaller number is on the left.\nTimes $-1$ mirrors everything around $0$.\nThen the larger number is suddenly on the left.",
       ),
       visual: custom("u2.flip", { p: 2, q: 5 }, L("De getallen $2$ en $5$ op een getallenlijn.", "The numbers $2$ and $5$ on a number line.")),
       task: L("Klik op $\\times 2$ en $+3$: blijft het teken? Klik daarna op $\\times(-1)$. Wat gebeurt er?", "Click $\\times 2$ and $+3$: does the sign stay? Then click $\\times(-1)$. What happens?"),

@@ -124,7 +124,7 @@ export const variablesLesson: Lesson = {
 
 export const likeTermsLesson: Lesson = {
   id: "u2.like-terms",
-  title: L("Gelijke termen samennemen", "Combining like terms"),
+  title: L("Gelijksoortige termen samennemen", "Combining like terms"),
   goal: L("Je maakt een som als $3x+2+4x-5$ zo kort mogelijk.", "You make an expression like $3x+2+4x-5$ as short as possible."),
   minutes: 8,
   calculator: "off",
@@ -158,8 +158,8 @@ export const likeTermsLesson: Lesson = {
       kind: "explain",
       title: L("Gelijke soorten", "Like terms"),
       body: L(
-        "$x$-termen zijn één soort. Losse getallen zijn een andere soort.\n$2x+4x=6x$: zes $x$-blokken.\n$2x+3$ kun je níet korter maken. Dat zijn twee soorten.",
-        "$x$-terms are one kind. Plain numbers are another kind.\n$2x+4x=6x$: six $x$-blocks.\n$2x+3$ cannot be made shorter. Those are two kinds.",
+        "$x$-termen zijn één soort. Losse getallen zijn een andere soort.\nTermen van dezelfde soort heten gelijksoortige termen.\n$2x+4x=6x$: zes $x$-blokken.\n$2x+3$ kun je níet korter maken. Dat zijn twee soorten.",
+        "$x$-terms are one kind. Plain numbers are another kind.\nTerms of the same kind are called like terms.\n$2x+4x=6x$: six $x$-blocks.\n$2x+3$ cannot be made shorter. Those are two kinds.",
       ),
     },
     {

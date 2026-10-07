@@ -129,6 +129,23 @@ export const expandLesson: Lesson = {
         ],
       },
     },
+    {
+      kind: "example",
+      title: L("Voorbeeld: $2x(3x-4)$", "Example: $2x(3x-4)$"),
+      problem: L("Werk de haakjes weg: $2x(3x-4)$.", "Expand the brackets: $2x(3x-4)$."),
+      visual: arrows([[2, 1]], [[3, 1], [-4, 0]], "2x(3x-4)"),
+      solution: {
+        steps: [
+          { latex: "2x(3x-4)", note: L("Twee pijlen vanaf $2x$.", "Two arrows from $2x$.") },
+          { latex: "\\hl{2x\\cdot 3x}+\\hl{2x\\cdot(-4)}", note: L("$2x$ keer elke term.", "$2x$ times every term.") },
+          {
+            latex: "\\ask{6x^{2}}+2x\\cdot(-4)",
+            note: L("Getal keer getal: $2\\cdot 3=6$. En $x\\cdot x=x^2$.", "Number times number: $2\\cdot 3=6$. And $x\\cdot x=x^2$."),
+          },
+          { latex: "6x^{2}-\\ask{8x}", note: L("$2x\\cdot(-4)=-8x$.", "$2x\\cdot(-4)=-8x$.") },
+        ],
+      },
+    },
   ],
   practice: [
     { generatorId: "u2.expand-single", difficulty: 1, count: 3 },
@@ -214,6 +231,23 @@ export const expandDoubleLesson: Lesson = {
           { latex: "\\hl{x\\cdot x+x\\cdot(-4)+3\\cdot x+3\\cdot(-4)}", note: L("Elke term keer elke term.", "Every term times every term.") },
           { latex: "x^{2}-4x+3x-\\ask{12}", note: L("$3\\cdot(-4)=-12$.", "$3\\cdot(-4)=-12$.") },
           { latex: "x^{2}-\\ask{x}-12", note: L("$-4x+3x=-x$.", "$-4x+3x=-x$.") },
+        ],
+      },
+    },
+    {
+      kind: "example",
+      title: L("Voorbeeld: $(2x+1)(x+3)$", "Example: $(2x+1)(x+3)$"),
+      problem: L("Werk de haakjes weg: $(2x+1)(x+3)$.", "Expand the brackets: $(2x+1)(x+3)$."),
+      visual: { kind: "area-model", rows: ["2x", "1"], cols: ["x", "3"] },
+      solution: {
+        steps: [
+          { latex: "(2x+1)(x+3)", note: L("Vier pijlen. Nu staat er een getal voor de eerste $x$.", "Four arrows. Now there is a number in front of the first $x$.") },
+          { latex: "\\hl{2x\\cdot x+2x\\cdot 3+1\\cdot x+1\\cdot 3}", note: L("Elke term keer elke term.", "Every term times every term.") },
+          {
+            latex: "\\ask{2x^{2}}+6x+x+3",
+            note: L("$2x\\cdot x=2x^2$. En $2x\\cdot 3=6x$: getal keer getal.", "$2x\\cdot x=2x^2$. And $2x\\cdot 3=6x$: number times number."),
+          },
+          { latex: "2x^{2}+\\ask{7x}+3", note: L("$6x+x=7x$.", "$6x+x=7x$.") },
         ],
       },
     },

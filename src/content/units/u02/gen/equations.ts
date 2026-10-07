@@ -9,7 +9,7 @@ import { frac, gcd, term } from "@/math/latex";
 import type { Rng } from "@/math/random";
 import { evaluate, parse } from "@/math/cas";
 import type { VisualSpec } from "@/visuals/types";
-import { custom, L, lin, relationTruth } from "../helpers";
+import { custom, L, lin, par, relationTruth } from "../helpers";
 
 /** `ax+b=cx+d` in LaTeX, with `c=0` written as just `d`. */
 export const eqLatex = (a: number, b: number, c: number, d: number) => `${lin(a, b)}=${lin(c, d)}`;
@@ -57,10 +57,16 @@ export function solveSteps(a: number, b: number, c: number, d: number): Step[] {
 function nudge(a: number, b: number, c: number): Loc {
   if (c !== 0) {
     const cx = term(c, "x");
-    return L(
-      `Aan beide kanten staat een $x$-term. Zorg eerst dat rechts geen $x$ meer staat: rechts staat $${cx}$.`,
-      `There is an $x$-term on both sides. First make sure there is no $x$ on the right: the right has $${cx}$.`,
-    );
+    const ax = term(Math.abs(c), "x");
+    return c > 0
+      ? L(
+          `Aan beide kanten staat een $x$-term. Rechts staat $${cx}$. Haal links en rechts $${ax}$ weg.`,
+          `There is an $x$-term on both sides. The right has $${cx}$. Take $${ax}$ away on both sides.`,
+        )
+      : L(
+          `Aan beide kanten staat een $x$-term. Rechts staat $${cx}$. Tel links en rechts $${ax}$ op.`,
+          `There is an $x$-term on both sides. The right has $${cx}$. Add $${ax}$ on both sides.`,
+        );
   }
   if (b !== 0) {
     return L(
@@ -254,7 +260,8 @@ function bracketParts(rng: Rng, difficulty: Difficulty): BracketEq {
     const num = (a - c) * x + a * b;
     if (num % c !== 0) continue;
     const e = num / c;
-    if (e !== 0 && Math.abs(e) <= 9) return { a, b, rhs: { c, e, bracket: true }, x };
+    // e = b would give the same bracket on both sides (answer x = -b at a glance).
+    if (e !== 0 && e !== b && Math.abs(e) <= 9) return { a, b, rhs: { c, e, bracket: true }, x };
   }
 }
 
@@ -284,8 +291,8 @@ export const equationBrackets: Generator = {
         latex: `\\ask{${lin(a, B)}}=${both ? `\\hl{${lin(C, D)}}` : rhsLatex}`,
         note: both
           ? L(
-              `Eerst haakjes weg, links en rechts. Links: $${a}$ keer $x$ én $${a}$ keer $${b < 0 ? `(${b})` : b}$.`,
-              `Brackets first, on both sides. Left: $${a}$ times $x$ and $${a}$ times $${b < 0 ? `(${b})` : b}$.`,
+              `Eerst haakjes weg, links en rechts. Links: $${a}$ keer $x$ én $${a}$ keer $${par(b)}$. Rechts: $${C}$ keer $x$ én $${C}$ keer $${par(D / C)}$.`,
+              `Brackets first, on both sides. Left: $${a}$ times $x$ and $${a}$ times $${par(b)}$. Right: $${C}$ times $x$ and $${C}$ times $${par(D / C)}$.`,
             )
           : L(
               `Eerst haakjes weg: $${a}$ keer $x$ én $${a}$ keer $${b < 0 ? `(${b})` : b}$.`,
@@ -326,8 +333,8 @@ export const equationBrackets: Generator = {
       calculator: "off",
       hints: {
         nudge: L(
-          `Werk eerst de haakjes weg. $${bracket(a, b)}$ wordt $${a}\\cdot x$ plus $${a}\\cdot ${b < 0 ? `(${b})` : b}$.`,
-          `First expand the brackets. $${bracket(a, b)}$ becomes $${a}\\cdot x$ plus $${a}\\cdot ${b < 0 ? `(${b})` : b}$.`,
+          `Werk eerst de haakjes weg. $${bracket(a, b)}$ wordt $${a}\\cdot x$ plus $${par(a)}\\cdot ${par(b)}$.${both ? " Rechts net zo." : ""}`,
+          `First expand the brackets. $${bracket(a, b)}$ becomes $${a}\\cdot x$ plus $${par(a)}\\cdot ${par(b)}$.${both ? " The same on the right." : ""}`,
         ),
         rule: {
           text: L(

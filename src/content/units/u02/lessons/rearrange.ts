@@ -14,6 +14,11 @@ const TIMES2_PLUS3 = [
   { op: "+", n: "3" },
 ] as const;
 
+const MOUNTAIN = [
+  { op: "*", n: "6" },
+  { op: "from", n: "15" },
+] as const;
+
 export const rearrangeLesson: Lesson = {
   id: "u2.rearrange",
   title: L("Formules omwerken", "Rearranging formulas"),
@@ -60,8 +65,8 @@ export const rearrangeLesson: Lesson = {
       kind: "explain",
       title: L("Omgekeerde stappen", "Opposite steps"),
       body: L(
-        "Plus maak je ongedaan met min.\nKeer maak je ongedaan met delen.\nBegin altijd bij de laatste stap.",
-        "You undo plus with minus.\nYou undo times with dividing.\nAlways start with the last step.",
+        "Plus maak je ongedaan met min.\nKeer maak je ongedaan met delen. Delen maak je ongedaan met keer.\nBegin altijd bij de laatste stap.",
+        "You undo plus with minus.\nYou undo times with dividing. You undo dividing with times.\nAlways start with the last step.",
       ),
     },
     {
@@ -110,6 +115,24 @@ export const rearrangeLesson: Lesson = {
           display: "4+2a",
         }).steps,
       },
+    },
+    {
+      kind: "explain",
+      title: L("Een getal min de letter", "A number minus the letter"),
+      body: L(
+        "Soms staat er $15-6h$: $15$ min iets.\nDat maak je ongedaan met hetzelfde: $15$ min de andere kant.\nKijk: $15-x=9$ geeft $x=15-9=6$.",
+        "Sometimes it says $15-6h$: $15$ minus something.\nYou undo that with the same thing: $15$ minus the other side.\nLook: $15-x=9$ gives $x=15-9=6$.",
+      ),
+    },
+    {
+      kind: "example",
+      title: L("Voorbeeld: op de berg", "Example: on the mountain"),
+      problem: L(
+        "Op een berg is het op $h$ km hoogte ongeveer $T=15-6h$ graden. Schrijf als $h=\\ldots$.",
+        "On a mountain, at a height of $h$ km it is about $T=15-6h$ degrees. Write it as $h=\\ldots$.",
+      ),
+      visual: machine({ ops: MOUNTAIN, input: "h", output: "T" }, "T=15-6h"),
+      solution: { steps: undoSteps({ out: "T", inp: "h", ops: [...MOUNTAIN] }).steps },
     },
     {
       kind: "example",

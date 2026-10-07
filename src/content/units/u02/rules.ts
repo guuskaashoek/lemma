@@ -27,8 +27,8 @@ export const rules: RuleCard[] = [
     id: "u2.like-terms",
     name: L("Gelijke soorten samen", "Like with like"),
     statement: L(
-      "Tel $x$-termen bij $x$-termen op en losse getallen bij losse getallen. Het teken vóór een term hoort bij die term.",
-      "Add $x$-terms to $x$-terms and plain numbers to plain numbers. The sign in front of a term belongs to that term.",
+      "Neem gelijksoortige termen samen: $x$-termen bij $x$-termen, losse getallen bij losse getallen. Het teken vóór een term hoort bij die term.",
+      "Combine like terms: $x$-terms with $x$-terms, plain numbers with plain numbers. The sign in front of a term belongs to that term.",
     ),
     lessonId: "u2.like-terms",
     example: {
@@ -118,8 +118,8 @@ export const rules: RuleCard[] = [
     id: "u2.inequality",
     name: L("Ongelijkheid oplossen", "Solving an inequality"),
     statement: L(
-      "Los een ongelijkheid op zoals een vergelijking. Het teken blijft staan. Op de getallenlijn: open bolletje bij $<$ en $>$, dicht bolletje bij $\\le$ en $\\ge$.",
-      "Solve an inequality like an equation. The sign stays. On the number line: an open dot for $<$ and $>$, a closed dot for $\\le$ and $\\ge$.",
+      "Los een ongelijkheid op zoals een vergelijking. Bij plus en min, en bij keer of delen door een positief getal, blijft het teken staan. Op de getallenlijn: open bolletje bij $<$ en $>$, dicht bolletje bij $\\le$ en $\\ge$.",
+      "Solve an inequality like an equation. Adding, subtracting, and multiplying or dividing by a positive number keep the sign. On the number line: an open dot for $<$ and $>$, a closed dot for $\\le$ and $\\ge$.",
     ),
     lessonId: "u2.inequalities",
     example: {

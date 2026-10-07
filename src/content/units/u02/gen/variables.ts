@@ -65,7 +65,10 @@ function fillLinear(terms: TileTerm[], x: number): Fill {
   const b = terms.find(([, k]) => k === "1")?.[0] ?? 0;
   const steps: Step[] = [
     { latex: hlFilled, note: L(`Vul in: op de plek van $x$ komt $${x}$.`, `Fill in: $${x}$ goes where $x$ was.`) },
-    { latex: products, note: L(`Eerst keer: $${a}\\cdot ${par(x)}=${prod}$.`, `Multiply first: $${a}\\cdot ${par(x)}=${prod}$.`) },
+    terms[0][1] === "1" && a < 0
+      ? // `9-3x`: the step shows `9-9`, so the note works with $3\cdot 3$.
+        { latex: products, note: L(`Eerst keer: $${-a}\\cdot ${par(x)}=${-prod}$.`, `Multiply first: $${-a}\\cdot ${par(x)}=${-prod}$.`) }
+      : { latex: products, note: L(`Eerst keer: $${a}\\cdot ${par(x)}=${prod}$.`, `Multiply first: $${a}\\cdot ${par(x)}=${prod}$.`) },
     { latex: `\\ask{${answer}}`, note: L("Reken uit.", "Work it out.") },
   ];
   const mistakes: Mistake[] = [];
@@ -149,7 +152,15 @@ function fillSquare(rng: Rng): Fill {
   const steps: Step[] = [
     { latex: `(\\hl{${x}})^{2}${bPart}`, note: L(`Vul in: $x=${x}$. Zet het tussen haakjes.`, `Fill in: $x=${x}$. Put it in brackets.`) },
     { latex: `\\ask{${sq}}${bPart.replace(/\\hl\{(-?\d+)\}/, "$1")}`, note: L(`Eerst de macht: $(${x})^{2}=(${x})\\cdot(${x})=${sq}$.`, `The power first: $(${x})^{2}=(${x})\\cdot(${x})=${sq}$.`) },
-    { latex: `${sq}${bx < 0 ? `-\\ask{${-bx}}` : `+\\ask{${bx}}`}`, note: L(`Dan keer: $${b}\\cdot(${x})=${bx}$.`, `Then multiply: $${b}\\cdot(${x})=${bx}$.`) },
+    {
+      latex: `${sq}${bx < 0 ? `-\\ask{${-bx}}` : `+\\ask{${bx}}`}`,
+      note:
+        b === 1
+          ? L(`Plus een min-getal is min: $+(${x})=${bx}$.`, `Adding a negative number is subtracting: $+(${x})=${bx}$.`)
+          : b === -1
+            ? L(`Min een min-getal is plus: $-(${x})=+${bx}$.`, `Subtracting a negative number is adding: $-(${x})=+${bx}$.`)
+            : L(`Dan keer: $${b}\\cdot(${x})=${bx}$.`, `Then multiply: $${b}\\cdot(${x})=${bx}$.`),
+    },
     { latex: `\\ask{${answer}}`, note: L("Reken uit.", "Work it out.") },
   ];
   return {
@@ -337,7 +348,7 @@ function likeTerms(rng: Rng, difficulty: Difficulty): TileTerm[] {
 export const combineLikeTerms: Generator = {
   id: "u2.like-terms",
   skillId: "u2.like-terms",
-  title: L("Gelijke termen samennemen", "Combining like terms"),
+  title: L("Gelijksoortige termen samennemen", "Combining like terms"),
   generate(rng, difficulty) {
     const terms = likeTerms(rng, difficulty);
     const latex = termsLatex(terms);
@@ -350,9 +361,14 @@ export const combineLikeTerms: Generator = {
     const onesTail = termsLatex(ones).replace(/^(?=\d)/, "+");
     const steps: Step[] = [{ latex, note: L("Dit is de som.", "This is the expression.") }];
     if (ones.length > 0) {
-      steps.push({ latex: `\\hl{${xsLatex}}${onesTail}`, note: L("Zet de $x$-termen naast elkaar, en de losse getallen ook.", "Put the $x$-terms together, and the plain numbers too.") });
+      // Only reorder when the terms are not already sorted.
+      if (`${xsLatex}${onesTail}` !== latex) {
+        steps.push({ latex: `\\hl{${xsLatex}}${onesTail}`, note: L("Zet de $x$-termen naast elkaar, en de losse getallen ook.", "Put the $x$-terms together, and the plain numbers too.") });
+      }
       steps.push({ latex: `\\ask{${term(X, "x")}}${onesTail}`, note: L(`Tel de $x$-blokken: $${xsLatex}=${term(X, "x")}$.`, `Count the $x$-blocks: $${xsLatex}=${term(X, "x")}$.`) });
-      if (C !== 0) {
+      if (ones.length === 1) {
+        // One plain number: nothing to add up, the previous line is the answer.
+      } else if (C !== 0) {
         steps.push({
           latex: `${term(X, "x")}${C < 0 ? `-\\ask{${-C}}` : `+\\ask{${C}}`}`,
           note: L(`Tel de losse getallen: $${termsLatex(ones)}=${C}$.`, `Add the plain numbers: $${termsLatex(ones)}=${C}$.`),
@@ -370,8 +386,8 @@ export const combineLikeTerms: Generator = {
         id: "squared",
         latex: sum([[X, "x^{2}"], [C, ""]]),
         explain: L(
-          "$x+x=2x$, niet $x^2$. Je telt blokken bij elkaar op. Je vermenigvuldigt niet.",
-          "$x+x=2x$, not $x^2$. You add blocks together. You do not multiply.",
+          `$${xsLatex}=${term(X, "x")}$, niet $${term(X, "x^{2}")}$. Je telt blokken bij elkaar op. Je vermenigvuldigt niet.`,
+          `$${xsLatex}=${term(X, "x")}$, not $${term(X, "x^{2}")}$. You add blocks together. You do not multiply.`,
         ),
       });
     }
