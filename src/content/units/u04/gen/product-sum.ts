@@ -32,9 +32,13 @@ export function pairProduct(p: number, q: number): string {
 /** Two numbers for x² + (p+q)x + pq at each difficulty. */
 function pickPair(rng: Rng, difficulty: Difficulty): [number, number] {
   if (difficulty === 1) {
-    const p = rng.int(1, 11);
-    const q = rng.int(1, 11);
-    return p <= q ? [p, q] : [q, p];
+    // Positive numbers with a product of at most 60: level 1 must be truly easy.
+    for (;;) {
+      const p = rng.int(1, 15);
+      const q = rng.int(1, 15);
+      if (p * q > 60) continue;
+      return p <= q ? [p, q] : [q, p];
+    }
   }
   for (;;) {
     const p = rng.nonZeroInt(-9, 9);
@@ -184,12 +188,16 @@ export const productSumSolve: Generator = {
   skillId: "u4.product-sum-solve",
   title: L("Oplossen met product-som", "Solving with product-sum"),
   generate(rng, difficulty) {
+    const form = difficulty === 1 ? "std" : difficulty === 2 ? rng.pick(["std", "move"] as const) : rng.pick(["move-x", "brackets", "times-k"] as const);
     // Roots r1 <= r2; then x² + bx + c = (x - r1)(x - r2).
+    // Sum 0 (like x² = 25) only in the plain form at level 2: in the other
+    // forms it becomes "square equals number", not product-sum.
+    const sumZeroOk = difficulty === 2 && form === "std";
     let r1: number, r2: number;
     do {
       r1 = rng.int(-9, 9);
       r2 = rng.int(-9, 9);
-    } while (r1 === 0 || r2 === 0 || (r1 === r2 && !rng.chance(0.15)) || (difficulty === 1 && r1 + r2 === 0));
+    } while (r1 === 0 || r2 === 0 || (r1 === r2 && !rng.chance(0.15)) || (!sumZeroOk && r1 + r2 === 0));
     if (r1 > r2) [r1, r2] = [r2, r1];
     const b = -(r1 + r2);
     const c = r1 * r2;
@@ -198,7 +206,6 @@ export const productSumSolve: Generator = {
     let latex = std;
     let nudge: Loc;
 
-    const form = difficulty === 1 ? "std" : difficulty === 2 ? rng.pick(["std", "move"] as const) : rng.pick(["move-x", "brackets", "times-k"] as const);
     if (form === "std") {
       steps.push({ latex: std, note: L("Rechts staat al $0$. Ontbind de linkerkant.", "The right side is already $0$. Factorise the left side.") });
       nudge = productSumNudge(b, c);
@@ -227,7 +234,6 @@ export const productSumSolve: Generator = {
     } else if (form === "brackets") {
       // x(x + b) = -c
       latex = `x${rootFactorB(-b)}=${-c}`;
-      if (b === 0) latex = `x\\cdot x=${-c}`;
       steps.push(
         { latex, note: L("Werk eerst de haakjes weg. Maak daarna rechts $0$.", "First expand the brackets. Then make the right side $0$.") },
         {
@@ -250,10 +256,16 @@ export const productSumSolve: Generator = {
         { latex, note: L(`Deel eerst beide kanten door $${k}$. Rechts blijft $0$.`, `First divide both sides by $${k}$. The right side stays $0$.`) },
         { latex: `\\ask{${quad(1, b, c)}}=0`, note: L(`Deel elke term door $${k}$.`, `Divide every term by $${k}$.`) },
       );
-      nudge = L(
-        `Alle getallen zitten in de tafel van $${Math.abs(k)}$. Deel eerst beide kanten door $${k}$, dan staat er $x^{2}+\\ldots$`,
-        `All numbers are multiples of $${Math.abs(k)}$. First divide both sides by $${k}$, then it says $x^{2}+\\ldots$`,
-      );
+      nudge =
+        k === -1
+          ? L(
+              `Er staat $-x^{2}$. Deel eerst beide kanten door $-1$: alle tekens draaien om. Rechts blijft $0$.`,
+              `It starts with $-x^{2}$. First divide both sides by $-1$: every sign flips. The right side stays $0$.`,
+            )
+          : L(
+              `Alle getallen zitten in de tafel van $${k}$. Deel eerst beide kanten door $${k}$, dan staat er $x^{2}+\\ldots$`,
+              `All numbers are multiples of $${k}$. First divide both sides by $${k}$, then it says $x^{2}+\\ldots$`,
+            );
     }
 
     if (r1 === r2) {

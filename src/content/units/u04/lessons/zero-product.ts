@@ -13,7 +13,7 @@ export const zeroProductLesson: Lesson = {
     "Je lost $(x-3)(x+5)=0$ en $x^{2}=25$ op, en je vindt beide oplossingen.",
     "You solve $(x-3)(x+5)=0$ and $x^{2}=25$, and you find both solutions.",
   ),
-  minutes: 9,
+  minutes: 10,
   calculator: "off",
   calculatorOffReason: L(
     "De rekenmachine staat uit. Je leert hier een denkstap, geen rekensom.",
@@ -94,6 +94,24 @@ export const zeroProductLesson: Lesson = {
       },
     },
     {
+      kind: "example",
+      title: L("Voorbeeld: $x^{2}=5x$", "Example: $x^{2}=5x$"),
+      problem: L(
+        "Los op: $x^{2}=5x$. Pas op: deel niet door $x$. Dan raak je $x=0$ kwijt.",
+        "Solve: $x^{2}=5x$. Careful: do not divide by $x$. Then you lose $x=0$.",
+      ),
+      solution: {
+        steps: [
+          { latex: "x^{2}=5x", note: L("Rechts staat geen $0$.", "There is no $0$ on the right.") },
+          { latex: "x^{2}-\\hl{5x}=0", note: L("Haal aan beide kanten $5x$ weg.", "Subtract $5x$ on both sides.") },
+          { latex: "x(\\ask{x-5})=0", note: L("Haal $x$ buiten haakjes.", "Take $x$ out of the brackets.") },
+          { latex: "x=0\\lor x-5=0", note: L("Product is nul: maak elke factor nul.", "Product is zero: make each factor zero.") },
+          { latex: "x=0\\lor x=\\ask{5}", note: L("Twee oplossingen: $0$ en $5$.", "Two solutions: $0$ and $5$.") },
+        ],
+        solutions: [{ x: 0 }, { x: 5 }],
+      },
+    },
+    {
       kind: "explain",
       title: L("Product is nul", "Product is zero"),
       body: L(
@@ -134,6 +152,32 @@ export const zeroProductLesson: Lesson = {
         ],
         solutions: [{ x: 3 }, { x: -3 }],
       },
+    },
+    {
+      kind: "example",
+      title: L("Voorbeeld: $(x-2)^{2}=9$", "Example: $(x-2)^{2}=9$"),
+      problem: L(
+        "Los op: $(x-2)^{2}=9$. Zie $(x-2)$ als één blok.",
+        "Solve: $(x-2)^{2}=9$. See $(x-2)$ as one block.",
+      ),
+      solution: {
+        steps: [
+          { latex: "(x-2)^{2}=9", note: L("Het blok in het kwadraat is $9$. Dus het blok is $3$ of $-3$.", "The block squared is $9$. So the block is $3$ or $-3$.") },
+          { latex: "x-2=\\ask{3}\\lor x-2=-3", note: L("Twee vergelijkingen, net als bij product is nul.", "Two equations, just like with product is zero.") },
+          { latex: "x=\\ask{5}\\lor x-2=-3", note: L("Tel aan beide kanten $2$ op.", "Add $2$ on both sides.") },
+          { latex: "x=5\\lor x=\\ask{-1}", note: L("Doe hetzelfde met de tweede.", "Do the same with the second one.") },
+        ],
+        solutions: [{ x: 5 }, { x: -1 }],
+      },
+    },
+    {
+      kind: "explain",
+      title: L("Komt de wortel niet mooi uit?", "Is the root not a whole number?"),
+      body: L(
+        "Bij $x^{2}=7$ is er geen heel getal dat past.\nLaat de wortel dan gewoon staan: $x=\\sqrt{7}$ of $x=-\\sqrt{7}$.\nDat is het exacte antwoord.",
+        "For $x^{2}=7$ no whole number fits.\nThen just leave the root in: $x=\\sqrt{7}$ or $x=-\\sqrt{7}$.\nThat is the exact answer.",
+      ),
+      latex: "x^{2}=7\\ \\Rightarrow\\ x=\\sqrt{7}\\lor x=-\\sqrt{7}",
     },
     {
       kind: "explain",

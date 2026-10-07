@@ -26,12 +26,26 @@ export function substituted(a: number, b: number, c: number, m: Fraction | numbe
   return `${t1}${t2}${t3}`;
 }
 
+/** `(x-p)(x-q)` with a bare `x` first: `x(x+6)`, not `(x+6)x`. */
+function twoFactors(p: number, q: number): string {
+  return q === 0 ? `x${rootFactorB(p)}` : `${rootFactorB(p)}${rootFactorB(q)}`;
+}
+
 /** The rest of a sum after its first term: `+3x-2`, or nothing for 0. */
 const tail = (s: string) => (s === "0" ? "" : s.startsWith("-") ? s : `+${s}`);
 
 // ---------------------------------------------------------------------------
 // Valley or hill
 // ---------------------------------------------------------------------------
+
+/** Note for the number k in front of brackets or a square (k = 1 and -1 are not written). */
+function frontNote(k: number, where: "brackets" | "square"): Loc {
+  const nl = where === "brackets" ? "de haakjes" : "het kwadraat";
+  const en = where === "brackets" ? "the brackets" : "the square";
+  if (k === 1) return L(`Vóór ${nl} staat geen getal. Dus gewoon $x\\cdot x=x^{2}$.`, `There is no number in front of ${en}. So just $x\\cdot x=x^{2}$.`);
+  if (k === -1) return L(`Vóór ${nl} staat alleen een min. Dus $-x\\cdot x=-x^{2}$.`, `In front of ${en} there is only a minus. So $-x\\cdot x=-x^{2}$.`);
+  return L(`Vóór ${nl} staat $${k}$. Dus $${k}\\cdot x\\cdot x$.`, `In front of ${en} is $${k}$. So $${k}\\cdot x\\cdot x$.`);
+}
 
 const SHAPE_RULE: Loc = L(
   "Dal of berg: kijk naar het getal voor $x^{2}$. Positief: dalparabool $\\cup$. Negatief: bergparabool $\\cap$.",
@@ -77,22 +91,33 @@ export const parabolaShape: Generator = {
       const pre = k === 1 ? "" : k === -1 ? "-" : String(k);
       if (rng.chance(0.5)) {
         const q2 = q === p ? q + 1 : q;
-        formula = `${pre}${rootFactorB(p)}${rootFactorB(q2)}`;
+        formula = `${pre}${twoFactors(p, q2)}`;
         steps.push(
           { latex: formula, note: L("Werk in gedachten de haakjes weg. Alleen $x\\cdot x$ geeft $x^{2}$.", "Expand the brackets in your head. Only $x\\cdot x$ gives $x^{2}$.") },
-          { latex: `\\ask{${term(k, "x^{2}")}}${tail(poly([-k * (p + q2), k * p * q2]))}`, note: L(`Vóór de haakjes staat $${k}$. Dus $${k}\\cdot x\\cdot x$.`, `In front of the brackets is $${k}$. So $${k}\\cdot x\\cdot x$.`) },
+          { latex: `\\ask{${term(k, "x^{2}")}}${tail(poly([-k * (p + q2), k * p * q2]))}`, note: frontNote(k, "brackets") },
         );
       } else {
         formula = `${pre}${rootFactorB(p)}^{2}${q === 0 ? "" : q > 0 ? `+${q}` : q}`;
         steps.push(
           { latex: formula, note: L("Werk in gedachten de haakjes weg. Alleen $x\\cdot x$ geeft $x^{2}$.", "Expand the brackets in your head. Only $x\\cdot x$ gives $x^{2}$.") },
-          { latex: `\\ask{${term(k, "x^{2}")}}${tail(poly([-2 * k * p, k * p * p + q]))}`, note: L(`Vóór het kwadraat staat $${k}$. Dus $${k}\\cdot x\\cdot x$.`, `In front of the square is $${k}$. So $${k}\\cdot x\\cdot x$.`) },
+          { latex: `\\ask{${term(k, "x^{2}")}}${tail(poly([-2 * k * p, k * p * p + q]))}`, note: frontNote(k, "square") },
         );
       }
-      nudge = L(
-        `Je hoeft niet alles uit te rekenen. Alleen $x\\cdot x$ geeft $x^{2}$. Wat gebeurt er met de $${k}$ ervoor?`,
-        `You do not need to work everything out. Only $x\\cdot x$ gives $x^{2}$. What happens to the $${k}$ in front?`,
-      );
+      nudge =
+        k === 1
+          ? L(
+              "Je hoeft niet alles uit te rekenen. Alleen $x\\cdot x$ geeft $x^{2}$. Staat er een getal of een min-teken vóór?",
+              "You do not need to work everything out. Only $x\\cdot x$ gives $x^{2}$. Is there a number or a minus sign in front?",
+            )
+          : k === -1
+            ? L(
+                "Je hoeft niet alles uit te rekenen. Alleen $x\\cdot x$ geeft $x^{2}$. Wat doet het min-teken vooraan?",
+                "You do not need to work everything out. Only $x\\cdot x$ gives $x^{2}$. What does the minus sign at the front do?",
+              )
+            : L(
+                `Je hoeft niet alles uit te rekenen. Alleen $x\\cdot x$ geeft $x^{2}$. Wat gebeurt er met de $${k}$ ervoor?`,
+                `You do not need to work everything out. Only $x\\cdot x$ gives $x^{2}$. What happens to the $${k}$ in front?`,
+              );
     }
 
     return {
@@ -139,7 +164,7 @@ function pickParabola(rng: Rng, difficulty: Difficulty, wholeTop: boolean): Para
       p = rng.int(-8, 8);
       q = rng.int(-8, 8);
     } while (p >= q || (p + q) % 2 !== 0);
-    return { a: 1, b: -(p + q), c: p * q, formula: `${rootFactorB(p)}${rootFactorB(q)}`, zeros: [p, q] };
+    return { a: 1, b: -(p + q), c: p * q, formula: twoFactors(p, q), zeros: [p, q] };
   }
   if (difficulty === 2) {
     const m = rng.nonZeroInt(-6, 6);
@@ -248,7 +273,9 @@ export const parabolaTop: Generator = {
     const start = axisStart(P);
     // Each bracket x - p with m filled in: (m - p), or just m when p = 0.
     const bracket = (p: number) => (p === 0 ? par(m) : `(${m}${p > 0 ? `-${p}` : `+${-p}`})`);
-    const sub = P.zeros ? `${bracket(P.zeros[0])}\\cdot ${bracket(P.zeros[1])}` : substituted(P.a, P.b, P.c, m);
+    // Same order as in the formula (twoFactors puts a bare x first).
+    const zs = P.zeros && P.zeros[1] === 0 ? [0, P.zeros[0]] : P.zeros;
+    const sub = zs ? `${bracket(zs[0])}\\cdot ${bracket(zs[1])}` : substituted(P.a, P.b, P.c, m);
     const workNote = P.zeros
       ? L("Reken eerst elk haakje uit. Doe dan keer.", "First work out each bracket. Then multiply.")
       : L("Reken uit. Eerst het kwadraat, dan keer, dan plus en min.", "Work it out. First the square, then multiply, then add and subtract.");

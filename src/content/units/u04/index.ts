@@ -83,6 +83,7 @@ export const bundle: UnitBundle = {
       blocks: [
         { generatorId: "u4.common-factor", difficulty: 3, count: 1 },
         { generatorId: "u4.zero-product", difficulty: 3, count: 1 },
+        { generatorId: "u4.square-equation", difficulty: 3, count: 1 },
         { generatorId: "u4.product-sum", difficulty: 3, count: 1 },
         { generatorId: "u4.product-sum-solve", difficulty: 3, count: 1 },
         { generatorId: "u4.parabola-shape", difficulty: 3, count: 1 },

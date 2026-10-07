@@ -116,8 +116,8 @@ export const commonFactor: Generator = {
         nudge: withX
           ? k === 1
             ? L(
-                `In $${lead}$ en in $${secondAbs}$ zit allebei een $x$. Welk getal past nog in $${k * p}$ en $${Math.abs(k * q)}$?`,
-                `Both $${lead}$ and $${secondAbs}$ contain an $x$. Which number still goes into $${k * p}$ and $${Math.abs(k * q)}$?`,
+                `In $${lead}$ en in $${secondAbs}$ zit allebei een $x$. Past er ook een getal groter dan $1$ in $${k * p}$ én in $${Math.abs(k * q)}$?`,
+                `Both $${lead}$ and $${secondAbs}$ contain an $x$. Does a number bigger than $1$ also go into both $${k * p}$ and $${Math.abs(k * q)}$?`,
               )
             : L(
                 `Welk getal past in $${k * p}$ en in $${Math.abs(k * q)}$? En zit er in $${lead}$ en $${secondAbs}$ allebei een $x$?`,

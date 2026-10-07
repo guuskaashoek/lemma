@@ -236,6 +236,15 @@ export const productSumSolveLesson: Lesson = {
     },
     {
       kind: "explain",
+      title: L("Andere vormen", "Other forms"),
+      body: L(
+        "Staat er $2x^{2}-12x+16=0$? Deel eerst beide kanten door $2$: $x^{2}-6x+8=0$.\nStaat er $x(x+3)=10$? Werk eerst de haakjes weg: $x^{2}+3x=10$. Breng dan $10$ naar links.\nDaarna gaat het zoals altijd.",
+        "Does it say $2x^{2}-12x+16=0$? First divide both sides by $2$: $x^{2}-6x+8=0$.\nDoes it say $x(x+3)=10$? First expand the brackets: $x^{2}+3x=10$. Then move $10$ to the left.\nAfter that it works as always.",
+      ),
+      metaphor: "balance",
+    },
+    {
+      kind: "explain",
       title: L("Het stappenplan", "The plan"),
       body: L(
         "1. Zorg dat rechts $0$ staat.\n2. Ontbind met product-som. Zie [[rule:u4.product-sum]].\n3. Maak elke factor nul. Zie [[rule:u4.zero-product]].\n4. Controleer: vul je antwoorden in.",

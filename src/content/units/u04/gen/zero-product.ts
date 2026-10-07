@@ -129,7 +129,8 @@ export const zeroProduct: Generator = {
       do q = rng.int(-8, 8);
       while (new Fraction(q).equals(zeroOf(2, b)));
       const r = zeroOf(2, b);
-      latex = `${linear(2, b)}${rootFactorB(q)}=0`;
+      // A bare x goes first: x(2x+3)=0, not (2x+3)x=0.
+      latex = q === 0 ? `x${linear(2, b)}=0` : `${linear(2, b)}${rootFactorB(q)}=0`;
       roots = [r, new Fraction(q)];
       steps.push(
         { latex, note: L("Een product is nul. Dan is een van de factoren nul.", "A product is zero. Then one of the factors is zero.") },
@@ -151,7 +152,7 @@ export const zeroProduct: Generator = {
           explain: L(`Bij $2x=${-b}$ deel je $${-b}$ door $2$, niet $2$ door $${-b}$.`, `For $2x=${-b}$ you divide $${-b}$ by $2$, not $2$ by $${-b}$.`),
           relatedSkill: "u2.linear-equations",
         },
-      ].filter((m) => !roots.some((s) => s.equals(new Fraction(m.latex.includes("frac") ? 2 / -b : -b))));
+      ].filter((m) => !roots.some((s) => Math.abs(s.valueOf() - (num(m.latex) ?? Number.NaN)) < 1e-9));
       nudge = L(
         `Maak $${poly([2, b])}$ nul: dat is een vergelijking zoals op de balans. Maak daarna ook $${rootFactor(q)}$ nul.`,
         `Make $${poly([2, b])}$ zero: that is an equation like on the balance. Then also make $${rootFactor(q)}$ zero.`,
@@ -226,6 +227,7 @@ export const squareEquation: Generator = {
     let p = 0;
     let mistakes: Mistake[] = [];
     let nudge: Loc;
+    let exact = false; // the answer keeps a square root
 
     if (difficulty === 1) {
       // x^2 = perfect square, sometimes with a number to remove first.
@@ -301,17 +303,22 @@ export const squareEquation: Generator = {
           explain: L(`Goed, maar er is nog een. Ook $(${-s})^{2}=${c}$, dus ook $${poly([1, p])}=${-s}$.`, `Good, but there is another one. Also $(${-s})^{2}=${c}$, so also $${poly([1, p])}=${-s}$.`),
         });
       } else {
-        const choices = [2, 3, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30];
+        // Square-free numbers only, so the root cannot be simplified (no sqrt(8) = 2 sqrt(2)).
+        const choices = [2, 3, 5, 6, 7, 10, 11, 13, 14, 15, 17, 19, 21, 22, 23, 26, 29, 30];
         c = rng.pick(choices);
+        exact = true;
         const a = rng.pick([1, 2, 3]);
-        const k = rng.int(-15, 15);
+        // With a = 1 there is always a number to remove, so x^2 is not alone yet.
+        const k = a === 1 ? rng.nonZeroInt(-15, 15) : rng.int(-15, 15);
         latex = `${poly([a, 0, k])}=${a * c + k}`;
         steps.push({ latex, note: L("Zorg dat $x^{2}$ alleen staat.", "Get $x^{2}$ on its own.") });
         if (k !== 0) steps.push({ latex: `${term(a, "x^{2}")}=\\ask{${a * c}}`, note: removeNote(k) });
         if (a !== 1) steps.push({ latex: `x^{2}=\\ask{${c}}`, note: L(`Deel beide kanten door $${a}$.`, `Divide both sides by $${a}$.`) });
+        const firstNl = [k !== 0 ? `werk $${k > 0 ? `+${k}` : k}$ weg` : "", a !== 1 ? `deel door $${a}$` : ""].filter(Boolean).join(" en ");
+        const firstEn = [k !== 0 ? `get rid of $${k > 0 ? `+${k}` : k}$` : "", a !== 1 ? `divide by $${a}$` : ""].filter(Boolean).join(" and ");
         nudge = L(
-          `Maak eerst $x^{2}$ alleen. De wortel komt niet mooi uit: laat $\\sqrt{\\ }$ dan gewoon staan.`,
-          `First get $x^{2}$ on its own. The root is not a whole number: just leave the $\\sqrt{\\ }$ in.`,
+          `Maak eerst $x^{2}$ alleen: ${firstNl}. De wortel komt niet mooi uit: laat $\\sqrt{\\ }$ dan gewoon staan.`,
+          `First get $x^{2}$ on its own: ${firstEn}. The root is not a whole number: just leave the $\\sqrt{\\ }$ in.`,
         );
         mistakes.push({
           id: "half",
@@ -364,7 +371,9 @@ export const squareEquation: Generator = {
     return {
       prompt: difficulty === 2
         ? L("Los op. Geen oplossing? Kies dan 'Geen oplossing'.", "Solve. No solution? Then choose 'No solution'.")
-        : L("Los op.", "Solve."),
+        : exact
+          ? L("Los op. Geef het exacte antwoord: laat de wortel staan.", "Solve. Give the exact answer: leave the square root in.")
+          : L("Los op.", "Solve."),
       latex,
       visual: {
         kind: "plane",

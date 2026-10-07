@@ -7,7 +7,7 @@ import { roundHalfAwayFromZero, type Mistake } from "@/math/check";
 import { frac, poly } from "@/math/latex";
 import type { Rng } from "@/math/random";
 import type { Difficulty, Generator, Loc, Step } from "@/content/types";
-import { L, countRootsNumerically, custom, equationFn, holdsAt, num, par, quad, solutionValues } from "../helpers";
+import { L, countRootsNumerically, custom, equationFn, holdsAt, num, par, quad, removeNote, solutionValues } from "../helpers";
 
 /** Visual: the parabola of the equation, with optional +/- buttons. */
 export function parabolaVisual(a: number, b: number, c: number, show: string[], controls: string[] = []) {
@@ -24,20 +24,29 @@ export function parabolaVisual(a: number, b: number, c: number, show: string[], 
 /** A quadratic equation, maybe written in another order. */
 type Quad = { a: number; b: number; c: number; latex: string; rewritten: boolean };
 
-/** Writes ax² + bx + c = 0 in a different but equal way (for level 3). */
-function rewrite(rng: Rng, a: number, b: number, c: number): string {
+/** Writes ax² + bx + c = 0 in a different but equal way (for level 3), with its right side. */
+function rewrite(rng: Rng, a: number, b: number, c: number): { latex: string; rhs: string } {
   const k = rng.nonZeroInt(-6, 6);
+  const make = (lhs: string, rhs: string) => ({ latex: `${lhs}=${rhs}`, rhs });
   switch (rng.int(0, 2)) {
     case 0:
       // ax² = -bx - c
-      return `${poly([a, 0, 0])}=${poly([-b, -c])}`;
+      return make(poly([a, 0, 0]), poly([-b, -c]));
     case 1:
       // ax² + bx = -c
-      return `${poly([a, b, 0])}=${-c}`;
+      return make(poly([a, b, 0]), String(-c));
     default:
       // ax² + bx + c + k = k
-      return `${quad(a, b, c + k)}=${k}`;
+      return make(quad(a, b, c + k), String(k));
   }
+}
+
+/** Hint 1 for an equation that does not end in "= 0" yet, with its right side. */
+function rewriteNudge(rhs: string, then: Loc): Loc {
+  return L(
+    `Rechts staat $${rhs}$, niet $0$. Breng $${rhs}$ eerst naar links. ${then.nl}`,
+    `The right side is $${rhs}$, not $0$. First move $${rhs}$ to the left. ${then.en}`,
+  );
 }
 
 /** Mixed-up but correct: `D` from a, b, c, and the coefficients text. */
@@ -96,7 +105,8 @@ export const discriminant: Generator = {
   generate(rng, difficulty) {
     const { a, b, c } = pickCoefs(rng, difficulty);
     const rewritten = difficulty === 3;
-    const q: Quad = { a, b, c, latex: rewritten ? rewrite(rng, a, b, c) : `${quad(a, b, c)}=0`, rewritten };
+    const rw = rewritten ? rewrite(rng, a, b, c) : null;
+    const q: Quad = { a, b, c, latex: rw ? rw.latex : `${quad(a, b, c)}=0`, rewritten };
     const d = D(q);
     const mistakes: Mistake[] = [
       {
@@ -127,11 +137,8 @@ export const discriminant: Generator = {
       answer: { kind: "expr", latex: String(d), form: "integer" },
       calculator: "off",
       hints: {
-        nudge: rewritten
-          ? L(
-              `Zet eerst alles links, zodat rechts $0$ staat. Lees dan $a$, $b$ en $c$ af.`,
-              `First move everything to the left, so the right side is $0$. Then read off $a$, $b$ and $c$.`,
-            )
+        nudge: rw
+          ? rewriteNudge(rw.rhs, L("Lees dan $a$, $b$ en $c$ af.", "Then read off $a$, $b$ and $c$."))
           : L(
               `Hier is $a=${a}$, $b=${b}$ en $c=${c}$. Reken $${par(b)}^{2}$ en $4\\cdot ${par(a)}\\cdot ${par(c)}$ apart uit.`,
               `Here $a=${a}$, $b=${b}$ and $c=${c}$. Work out $${par(b)}^{2}$ and $4\\cdot ${par(a)}\\cdot ${par(c)}$ separately.`,
@@ -159,7 +166,8 @@ const ABC_RULE: Loc = L(
 );
 
 /** `\frac{-b ± \sqrt{D}}{2a}` as LaTeX for one sign. */
-const abcLatex = (b: number, d: number | string, a: number, sign: "+" | "-") => `\\frac{${-b}${sign}\\sqrt{${d}}}{${2 * a}}`;
+const abcLatex = (b: number, d: number | string, a: number, sign: "+" | "-") =>
+  `\\frac{${b === 0 ? (sign === "+" ? "" : "-") : `${-b}${sign}`}\\sqrt{${d}}}{${2 * a}}`;
 
 /** A number with a decimal comma in Dutch notes. */
 /** A rounded number with exactly 2 decimals, Dutch style: `8{,}80`. */
@@ -177,9 +185,10 @@ export const abcFormula: Generator = {
     if (difficulty === 1) {
       // Whole roots, so D is a perfect square.
       let r1: number, r2: number;
+      // Roots up to 6: then D is at most 12², a square you know without a calculator.
       do {
-        r1 = rng.int(-9, 9);
-        r2 = rng.int(-9, 9);
+        r1 = rng.int(-6, 6);
+        r2 = rng.int(-6, 6);
       } while (r1 === r2 || r1 === -r2);
       a = 1;
       b = -(r1 + r2);
@@ -207,7 +216,8 @@ export const abcFormula: Generator = {
     const d = b * b - 4 * a * c;
     // Level 3 sometimes starts in another order (never when there is no solution).
     const rewritten = difficulty === 3 && kind !== "none" && rng.chance(0.5);
-    const eq = rewritten ? rewrite(rng, a, b, c) : `${quad(a, b, c)}=0`;
+    const rw = rewritten ? rewrite(rng, a, b, c) : null;
+    const eq = rw ? rw.latex : `${quad(a, b, c)}=0`;
         const steps: Step[] = [{ latex: eq, note: rewritten ? L("Zet eerst alles links, zodat rechts $0$ staat.", "First move everything to the left, so the right side is $0$.") : L(`$a=${a}$, $b=${b}$, $c=${c}$.`, `$a=${a}$, $b=${b}$, $c=${c}$.`) }];
     if (rewritten) steps.push({ latex: `\\ask{${quad(a, b, c)}}=0`, note: L("Breng alles naar links. Let op de tekens.", "Move everything to the left. Watch the signs.") });
     const dNote = L(
@@ -279,21 +289,24 @@ export const abcFormula: Generator = {
 
     return {
       prompt:
-        kind === "square"
-          ? L("Los op met de abc-formule.", "Solve with the quadratic formula.")
-          : L("Los op met de abc-formule. Rond af op $2$ decimalen.", "Solve with the quadratic formula. Round to $2$ decimals."),
+        difficulty === 3
+          ? L(
+              "Los op met de abc-formule. Rond zo nodig af op $2$ decimalen. Geen oplossing? Kies dan 'Geen oplossing'.",
+              "Solve with the quadratic formula. Round to $2$ decimals if needed. No solution? Then choose 'No solution'.",
+            )
+          : kind === "square"
+            ? L("Los op met de abc-formule.", "Solve with the quadratic formula.")
+            : L("Los op met de abc-formule. Rond af op $2$ decimalen.", "Solve with the quadratic formula. Round to $2$ decimals."),
       latex: eq,
-      visual: parabolaVisual(a, b, c, ["axis", "zeros"]),
+      // Only the axis: labelled zeros in the hint picture would give the answer away.
+      visual: parabolaVisual(a, b, c, ["axis"]),
       answer: exact
         ? { kind: "solutions", variable: "x", values }
         : { kind: "solutions", variable: "x", values, form: "decimal", decimals: 2 },
       calculator: kind === "square" ? "off" : "allowed",
       hints: {
-        nudge: rewritten
-          ? L(
-              `Rechts staat nog geen $0$. Breng eerst alles naar links. Dan lees je $a$, $b$ en $c$ af.`,
-              `The right side is not $0$ yet. First move everything to the left. Then read off $a$, $b$ and $c$.`,
-            )
+        nudge: rw
+          ? rewriteNudge(rw.rhs, L("Dan lees je $a$, $b$ en $c$ af.", "Then read off $a$, $b$ and $c$."))
           : L(
               `$a=${a}$, $b=${b}$, $c=${c}$. Begin met $D=${par(b)}^{2}-4\\cdot ${par(a)}\\cdot ${par(c)}$.`,
               `$a=${a}$, $b=${b}$, $c=${c}$. Start with $D=${par(b)}^{2}-4\\cdot ${par(a)}\\cdot ${par(c)}$.`,
@@ -348,7 +361,8 @@ export const solutionCount: Generator = {
       if ((want === 0 && d < 0) || (want === 1 && d === 0) || (want === 2 && d > 0)) break;
     }
     const rewritten = difficulty === 3;
-    const q: Quad = { a, b, c, latex: rewritten ? rewrite(rng, a, b, c) : `${quad(a, b, c)}=0`, rewritten };
+    const rw = rewritten ? rewrite(rng, a, b, c) : null;
+    const q: Quad = { a, b, c, latex: rw ? rw.latex : `${quad(a, b, c)}=0`, rewritten };
     const d = D(q);
     return {
       prompt: L("Hoeveel oplossingen heeft deze vergelijking? Gebruik de discriminant.", "How many solutions does this equation have? Use the discriminant."),
@@ -356,8 +370,8 @@ export const solutionCount: Generator = {
       answer: { kind: "choice", options: COUNT_OPTIONS, correctIndex: want },
       calculator: "off",
       hints: {
-        nudge: rewritten
-          ? L(`Zet eerst alles links. Bereken dan $D$ en kijk alleen naar het teken.`, `First move everything to the left. Then work out $D$ and only look at its sign.`)
+        nudge: rw
+          ? rewriteNudge(rw.rhs, L("Bereken dan $D$ en kijk alleen naar het teken.", "Then work out $D$ and only look at its sign."))
           : L(
               `Bereken $D=${par(b)}^{2}-4\\cdot ${par(a)}\\cdot ${par(c)}$. Is dat positief, nul of negatief?`,
               `Work out $D=${par(b)}^{2}-4\\cdot ${par(a)}\\cdot ${par(c)}$. Is it positive, zero or negative?`,
@@ -407,14 +421,20 @@ export const oneSolution: Generator = {
       // The constant term holds p: x² + bx + p = 0, x² + bx = p or x² + bx + k = p.
       const b = 2 * rng.nonZeroInt(-4, 4);
       const form = rng.pick(["plus", "right", "shift", "shift"] as const);
-      const k = form === "shift" ? rng.int(1, 9) : 0;
-      // In the form x² + bx + C = 0, C is p, -p or k - p.
       const C = new Fraction(b * b, 4); // D = b² - 4C = 0
+      // k ≠ C, so the answer is never p = 0.
+      let k = 0;
+      if (form === "shift") {
+        do k = rng.int(1, 9);
+        while (C.equals(k));
+      }
+      // In the form x² + bx + C = 0, C is p, -p or k - p.
       const p = form === "plus" ? C : form === "right" ? C.neg() : new Fraction(k).sub(C);
       latex = form === "plus" ? `${poly([1, b, 0])}+p=0` : form === "right" ? `${poly([1, b, 0])}=p` : `${quad(1, b, k)}=p`;
       const cText = form === "plus" ? "p" : form === "right" ? "-p" : `${k}-p`;
       const cLatex = form === "plus" ? "p" : form === "right" ? "(-p)" : `(${k}-p)`;
-      const moved = form === "plus" ? L("", "") : L(`Zet alles links: $${poly([1, b, 0])}+${cLatex}=0$. `, `Move everything left: $${poly([1, b, 0])}+${cLatex}=0$. `);
+      const left = form === "right" ? `${poly([1, b, 0])}-p=0` : `${quad(1, b, k)}-p=0`;
+      const moved = form === "plus" ? L("", "") : L(`Zet alles links: $${left}$. `, `Move everything left: $${left}$. `);
       steps.push(
         {
           latex: `${b * b}-4\\cdot ${cLatex}=0`,
@@ -423,8 +443,20 @@ export const oneSolution: Generator = {
             `${moved.en}Exactly one solution: $D=0$. Here $a=1$, $b=${b}$ and $c=${cText}$. And $${par(b)}^{2}=${b * b}$.`,
           ),
         },
-        { latex: `p=\\ask{${frac(p)}}`, note: L("Los op met de balans.", "Solve with the balance.") },
+        {
+          latex: `4\\cdot ${cLatex}=\\ask{${b * b}}`,
+          note: L(`Balans: tel aan beide kanten $4\\cdot ${cLatex}$ op.`, `Balance: add $4\\cdot ${cLatex}$ on both sides.`),
+        },
+        { latex: `${cText}=\\ask{${frac(C)}}`, note: L("Deel beide kanten door $4$.", "Divide both sides by $4$.") },
       );
+      if (form === "right") {
+        steps.push({ latex: `p=\\ask{${frac(p)}}`, note: L("Deel beide kanten door $-1$.", "Divide both sides by $-1$.") });
+      } else if (form === "shift") {
+        steps.push(
+          { latex: `-p=\\ask{${frac(C.sub(k))}}`, note: removeNote(k) },
+          { latex: `p=\\ask{${frac(p)}}`, note: L("Deel beide kanten door $-1$.", "Divide both sides by $-1$.") },
+        );
+      }
       values = [p];
       nudge =
         form === "plus"
@@ -453,7 +485,8 @@ export const oneSolution: Generator = {
       let a: number, c: number, t: number;
       do {
         a = rng.pick([1, 1, 2, 3, 4, 5, 6, 8, 9]);
-        t = rng.int(1, 14);
+        // p = ±2t stays at most 12, so p² is a square you know without a calculator.
+        t = rng.int(1, 6);
         c = (t * t) / a;
       } while (!Number.isInteger(c) || c > 50);
       if (rng.chance(0.4)) {
@@ -461,14 +494,30 @@ export const oneSolution: Generator = {
         c = -c;
       }
       const r = 2 * t;
-      latex = `${a === 1 ? "" : a === -1 ? "-" : a}x^{2}+px${c > 0 ? "+" : ""}${c}=0`;
+      const lead = `${a === 1 ? "" : a === -1 ? "-" : a}x^{2}+px`;
+      const std = `${lead}${c > 0 ? "+" : ""}${c}=0`;
+      // Sometimes the number stands on the right: move it to the left first.
+      const onRight = rng.chance(0.5);
+      latex = onRight ? `${lead}=${-c}` : std;
+      const movedD = onRight ? L(`Zet alles links: $${std}$. `, `Move everything left: $${std}$. `) : L("", "");
       steps.push(
-        { latex: `p^{2}-4\\cdot ${par(a)}\\cdot ${par(c)}=0`, note: L(`Precies één oplossing: $D=0$. Hier is $a=${a}$, $b=p$ en $c=${c}$.`, `Exactly one solution: $D=0$. Here $a=${a}$, $b=p$ and $c=${c}$.`) },
+        {
+          latex: `p^{2}-4\\cdot ${par(a)}\\cdot ${par(c)}=0`,
+          note: L(
+            `${movedD.nl}Precies één oplossing: $D=0$. Hier is $a=${a}$, $b=p$ en $c=${c}$.`,
+            `${movedD.en}Exactly one solution: $D=0$. Here $a=${a}$, $b=p$ and $c=${c}$.`,
+          ),
+        },
         { latex: `p^{2}=\\ask{${4 * a * c}}`, note: L(`Reken $4\\cdot ${par(a)}\\cdot ${par(c)}$ uit en zet het rechts.`, `Work out $4\\cdot ${par(a)}\\cdot ${par(c)}$ and move it to the right.`) },
         { latex: `p=\\ask{${r}}\\lor p=${-r}`, note: L("Kwadraat is getal: twee antwoorden.", "Square equals number: two answers.") },
       );
       values = [new Fraction(r), new Fraction(-r)];
-      nudge = L(`Eén oplossing: $D=0$. Hier is $b=p$. Dus $p^{2}-4\\cdot ${par(a)}\\cdot ${par(c)}=0$.`, `One solution: $D=0$. Here $b=p$. So $p^{2}-4\\cdot ${par(a)}\\cdot ${par(c)}=0$.`);
+      nudge = onRight
+        ? L(
+            `Rechts staat $${-c}$, niet $0$. Zet eerst alles links. Eén oplossing betekent $D=0$, met $b=p$.`,
+            `The right side is $${-c}$, not $0$. First move everything to the left. One solution means $D=0$, with $b=p$.`,
+          )
+        : L(`Eén oplossing: $D=0$. Hier is $b=p$. Dus $p^{2}-4\\cdot ${par(a)}\\cdot ${par(c)}=0$.`, `One solution: $D=0$. Here $b=p$. So $p^{2}-4\\cdot ${par(a)}\\cdot ${par(c)}=0$.`);
       visual = parabolaVisual(a, 0, c, ["zeros"], ["b"]);
       mistakes.push({ id: "only-positive", latex: String(r), explain: L(`Goed, maar er is nog een. Ook $(${-r})^{2}=${r * r}$.`, `Good, but there is another one. Also $(${-r})^{2}=${r * r}$.`) });
     } else {
@@ -489,14 +538,21 @@ export const oneSolution: Generator = {
 
     const vals = values.map((v) => frac(v));
     return {
-      prompt: L("Voor welke waarde(n) van $p$ heeft de vergelijking precies één oplossing?", "For which value(s) of $p$ does the equation have exactly one solution?"),
+      // At level 3, p = 0 would make the equation linear (also one solution): leave that case out.
+      prompt:
+        difficulty === 3
+          ? L(
+              "Voor welke $p$ (niet $0$) heeft de vergelijking precies één oplossing?",
+              "For which $p$ (not $0$) does the equation have exactly one solution?",
+            )
+          : L("Voor welke waarde(n) van $p$ heeft de vergelijking precies één oplossing?", "For which value(s) of $p$ does the equation have exactly one solution?"),
       latex,
       visual,
       answer: { kind: "solutions", variable: "p", values: vals },
       calculator: "off",
       hints: {
         nudge,
-        rule: { text: COUNT_RULE, ruleId: "u4.solution-count" },
+        rule: { text: COUNT_RULE, ruleId: "u4.solution-count", metaphor: "balance" },
         solution: { steps, solutions: values.map((v) => ({ p: v.valueOf() })) },
       },
       mistakes: mistakes.filter((m) => !vals.includes(m.latex) || m.id === "only-positive"),

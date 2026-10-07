@@ -130,8 +130,7 @@ export const abcLesson: Lesson = {
     { generatorId: "u4.discriminant", difficulty: 1, count: 2 },
     { generatorId: "u4.abc", difficulty: 1, count: 2 },
     { generatorId: "u4.discriminant", difficulty: 2, count: 1 },
-    { generatorId: "u4.abc", difficulty: 2, count: 2 },
-    { generatorId: "u4.abc", difficulty: 3, count: 1 },
+    { generatorId: "u4.abc", difficulty: 2, count: 3 },
   ],
 };
 
@@ -234,5 +233,7 @@ export const discriminantLesson: Lesson = {
     { generatorId: "u4.solution-count", difficulty: 3, count: 1 },
     { generatorId: "u4.one-solution", difficulty: 2, count: 1 },
     { generatorId: "u4.one-solution", difficulty: 3, count: 1 },
+    // abc at level 3 can have one or no solution: that is only known after this lesson.
+    { generatorId: "u4.abc", difficulty: 3, count: 1 },
   ],
 };

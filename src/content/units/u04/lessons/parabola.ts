@@ -60,8 +60,8 @@ export const parabolaLesson: Lesson = {
       kind: "visual",
       title: L("Twee keer dezelfde hoogte", "The same height twice"),
       body: L(
-        "Dit is $y=x^{2}-6x+5$. Sleep het punt over de grafiek.\nElke hoogte, behalve de top, kom je twee keer tegen: links en rechts.",
-        "This is $y=x^{2}-6x+5$. Drag the point along the graph.\nEvery height, except the vertex, comes up twice: left and right.",
+        "Dit is $y=x^{2}-6x+5$. Sleep het punt over de grafiek.\nElke hoogte boven de top kom je twee keer tegen: links en rechts.",
+        "This is $y=x^{2}-6x+5$. Drag the point along the graph.\nEvery height above the vertex comes up twice: left and right.",
       ),
       visual: parabolaPlane(1, -6, 5),
       task: L(
