@@ -9,6 +9,7 @@ import { xInterceptSteps } from "../gen/intercepts";
 import { meetVisual } from "../gen/visuals";
 
 const F = (v: number) => new Fraction(v);
+const xInterceptExample = (a: Fraction, b: Fraction) => ({ steps: xInterceptSteps(a, b), solutions: [{ x: b.neg().div(a).valueOf() }] });
 
 export const axisInterceptsLesson: Lesson = {
   id: "u3.axis-intercepts",
@@ -21,7 +22,7 @@ export const axisInterceptsLesson: Lesson = {
   calculator: "off",
   calculatorOffReason: L("De rekenmachine staat uit. Je lost dit op met de balans.", "The calculator is off. You solve this with the balance."),
   info: {
-    what: L("Uitrekenen waar een lijn de $x$-as en de $y$-as raakt.", "Working out where a line meets the $x$-axis and the $y$-axis."),
+    what: L("Uitrekenen waar een lijn de $x$-as en de $y$-as snijdt.", "Working out where a line crosses the $x$-axis and the $y$-axis."),
     why: L(
       "Wanneer is iets precies nul? Bijvoorbeeld: wanneer is je accu leeg, of je geld op?",
       "When is something exactly zero? For example: when is your battery empty, or your money gone?",
@@ -36,8 +37,8 @@ export const axisInterceptsLesson: Lesson = {
       kind: "explain",
       title: L("Twee assen", "Two axes"),
       body: L(
-        "Een schuine lijn raakt de $y$-as in één punt. Daar is $x=0$.\nHij raakt de $x$-as ook in één punt. Daar is $y=0$.",
-        "A sloping line meets the $y$-axis at one point. There $x=0$.\nIt also meets the $x$-axis at one point. There $y=0$.",
+        "Een schuine lijn snijdt de $y$-as in één punt. Daar is $x=0$.\nHij snijdt de $x$-as ook in één punt. Daar is $y=0$.",
+        "A sloping line crosses the $y$-axis at one point. There $x=0$.\nIt also crosses the $x$-axis at one point. There $y=0$.",
       ),
     },
     {
@@ -64,21 +65,21 @@ export const axisInterceptsLesson: Lesson = {
       title: L("Voorbeeld: stijgende lijn", "Example: increasing line"),
       problem: L("Waar snijdt $y=2x-6$ de $x$-as?", "Where does $y=2x-6$ cross the $x$-axis?"),
       visual: meetVisual([{ a: 2, b: -6 }], 0),
-      solution: { steps: xInterceptSteps(F(2), F(-6)), solutions: [{ x: 3 }] },
+      solution: xInterceptExample(F(2), F(-6)),
     },
     {
       kind: "example",
       title: L("Voorbeeld: dalende lijn", "Example: decreasing line"),
       problem: L("Waar snijdt $y=-3x+6$ de $x$-as?", "Where does $y=-3x+6$ cross the $x$-axis?"),
       visual: meetVisual([{ a: -3, b: 6 }], 0),
-      solution: { steps: xInterceptSteps(F(-3), F(6)), solutions: [{ x: 2 }] },
+      solution: xInterceptExample(F(-3), F(6)),
     },
     {
       kind: "explain",
       title: L("En de y-as?", "And the y-axis?"),
       body: L(
-        "Op de $y$-as is $x=0$.\nVul $x=0$ in. Dan blijft $b$ over.\n$y=2x-6$ raakt de $y$-as dus in $(0,\\ -6)$.",
-        "On the $y$-axis $x=0$.\nPut in $x=0$. Then $b$ is left.\nSo $y=2x-6$ meets the $y$-axis at $(0,\\ -6)$.",
+        "Op de $y$-as is $x=0$.\nVul $x=0$ in. Dan blijft $b$ over.\n$y=2x-6$ snijdt de $y$-as dus in $(0,\\ -6)$.",
+        "On the $y$-axis $x=0$.\nPut in $x=0$. Then $b$ is left.\nSo $y=2x-6$ crosses the $y$-axis at $(0,\\ -6)$.",
       ),
     },
     {

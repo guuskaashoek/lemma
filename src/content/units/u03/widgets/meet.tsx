@@ -114,7 +114,12 @@ export function Meet({ props }: { props: Record<string, unknown> }) {
             : l({ nl: `Hier is y even groot op beide lijnen: het snijpunt is ${ptLabel(x, ys[0], locale)}.`, en: `Here y is the same on both lines: the intersection is ${ptLabel(x, ys[0], locale)}.` })
           : axis
             ? l({ nl: `Hier is y = ${numLabel(ys[0], locale)}. Zoek waar y = 0 is.`, en: `Here y = ${numLabel(ys[0], locale)}. Find where y = 0.` })
-            : l({ nl: `Verschil tussen de lijnen: ${numLabel(Math.abs(ys[0] - ys[1]), locale)}. Zoek waar het 0 is.`, en: `Gap between the lines: ${numLabel(Math.abs(ys[0] - ys[1]), locale)}. Find where it is 0.` })}
+            : !target
+              ? l({
+                  nl: `Verschil tussen de lijnen: ${numLabel(Math.abs(ys[0] - ys[1]), locale)}. Het blijft overal even groot: de lijnen snijden elkaar nooit.`,
+                  en: `Gap between the lines: ${numLabel(Math.abs(ys[0] - ys[1]), locale)}. It stays the same everywhere: the lines never cross.`,
+                })
+              : l({ nl: `Verschil tussen de lijnen: ${numLabel(Math.abs(ys[0] - ys[1]), locale)}. Zoek waar het 0 is.`, en: `Gap between the lines: ${numLabel(Math.abs(ys[0] - ys[1]), locale)}. Find where it is 0.` })}
       </Say>
 
       <div className="flex flex-wrap justify-center gap-2">

@@ -24,7 +24,8 @@ export const intersection: Generator = {
     let a1: Fraction, a2: Fraction, x0: Fraction, y0: Fraction;
     if (difficulty === 1) {
       a1 = F(rng.int(2, 5));
-      a2 = F(intNot(rng, -3, 3, [a1.valueOf()]));
+      // a2 < a1, so the x-terms stay on the left (no turning around yet).
+      a2 = F(rng.int(-3, Math.min(3, a1.valueOf() - 1)));
       x0 = F(rng.int(1, 5));
       y0 = F(rng.int(0, 9));
     } else if (difficulty === 2) {
@@ -72,8 +73,23 @@ export const intersection: Generator = {
         seen.push(v);
         mistakes.push({ id, latex: frac(v), explain });
       };
-      add("sign-number", b2.add(b1).div(k), L("Let op het teken van het losse getal: haal je het links weg, dan doe je rechts min.", "Watch the sign of the number: if you remove it on the left, you subtract it on the right."));
-      if (!a1.add(a2).equals(0)) add("sign-x", b2.sub(b1).div(a1.add(a2)), L(`Let op het teken bij de $x$: $${lin(a2, 0)}$ weghalen is min $${lin(a2, 0)}$ aan beide kanten.`, `Watch the sign of the $x$-term: removing $${lin(a2, 0)}$ means minus $${lin(a2, 0)}$ on both sides.`));
+      add(
+        "sign-number",
+        b2.add(b1).div(k),
+        b1.s < 0
+          ? L(`Let op het teken: $${frac(b1)}$ weghalen doe je door aan beide kanten $${frac(b1.abs())}$ op te tellen.`, `Watch the sign: to remove $${frac(b1)}$, add $${frac(b1.abs())}$ on both sides.`)
+          : L(`Let op het teken: $+${frac(b1)}$ weghalen doe je door aan beide kanten $${frac(b1)}$ af te trekken.`, `Watch the sign: to remove $+${frac(b1)}$, subtract $${frac(b1)}$ on both sides.`),
+      );
+      if (!a2.equals(0) && !a1.add(a2).equals(0)) {
+        const ax = lin(a2.abs(), 0);
+        add(
+          "sign-x",
+          b2.sub(b1).div(a1.add(a2)),
+          a2.s < 0
+            ? L(`Let op het teken bij de $x$: rechts staat $-${ax}$. Die haal je weg door aan beide kanten $${ax}$ op te tellen.`, `Watch the sign of the $x$-term: on the right there is $-${ax}$. Remove it by adding $${ax}$ on both sides.`)
+            : L(`Let op het teken bij de $x$: rechts staat $+${ax}$. Die haal je weg door aan beide kanten $${ax}$ af te trekken.`, `Watch the sign of the $x$-term: on the right there is $+${ax}$. Remove it by subtracting $${ax}$ on both sides.`),
+        );
+      }
       add("gave-y", y0, L(`Dat is de $y$ van het snijpunt. De vraag is de $x$.`, `That is the $y$ of the intersection. The question asks for $x$.`));
       return {
         prompt: L(

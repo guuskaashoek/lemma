@@ -4,12 +4,34 @@
  * A system is written as one relation with `\land` ("and"), so every step
  * stays equivalent to the one before and the CAS can check it.
  */
-import type Fraction from "fraction.js";
+import Fraction from "fraction.js";
 import { evaluate, parse } from "@/math/cas";
 import { frac, paren, sum, term } from "@/math/latex";
 import { stripMarkup } from "@/math/normalize";
 import type { Loc, Step } from "@/content/types";
 import { L, lin, signed } from "../helpers";
+
+/** A coefficient in front of a filled-in value: `3\cdot`, nothing for 1, `-` for -1. */
+function coef(p: Fraction): string {
+  if (p.equals(1)) return "";
+  if (p.equals(-1)) return "-";
+  return `${frac(p)}\\cdot`;
+}
+
+/** The intersection of `y = a1 x + b1` and `y = a2 x + b2` (lines not parallel). */
+export function meetPoint(a1: Fraction, b1: Fraction, a2: Fraction, b2: Fraction): { x: Fraction; y: Fraction } {
+  const x = b2.sub(b1).div(a1.sub(a2));
+  return { x, y: a1.mul(x).add(b1) };
+}
+
+/** The solution of the system `p1 x + q1 y = c1`, `p2 x + q2 y = c2` (Cramer's rule). */
+export function solveRows(r1: Row, r2: Row): { x: Fraction; y: Fraction } {
+  const det = r1.p.mul(r2.q).sub(r1.q.mul(r2.p));
+  return {
+    x: r1.c.mul(r2.q).sub(r1.q.mul(r2.c)).div(det),
+    y: r1.p.mul(r2.c).sub(r1.c.mul(r2.p)).div(det),
+  };
+}
 
 /** `px + qy = c` in LaTeX. */
 export function rowLatex(p: Fraction, q: Fraction, c: Fraction): string {
@@ -71,6 +93,9 @@ export function systemEquations(latex: string): string[] {
 
 export type Row = { p: Fraction; q: Fraction; c: Fraction };
 
+/** Highlight a row only when it was multiplied (changed). */
+const mark = (m: number, latex: string) => (m === 1 ? latex : `\\hl{${latex}}`);
+
 /**
  * Elimination: rows I and II, optional multipliers, then I − II or I + II so
  * y drops out. Then x, then x back into row II for y.
@@ -88,7 +113,7 @@ export function eliminationSteps(r1: Row, r2: Row, m1: number, m2: number, op: "
     if (m1 !== 1) parts.push(L(`I keer $${m1}$`, `I times $${m1}$`));
     if (m2 !== 1) parts.push(L(`II keer $${m2}$`, `II times $${m2}$`));
     steps.push({
-      latex: `\\hl{${rowLatex(s1.p, s1.q, s1.c)}}\\land \\hl{${rowLatex(s2.p, s2.q, s2.c)}}`,
+      latex: `${mark(m1, rowLatex(s1.p, s1.q, s1.c))}\\land ${mark(m2, rowLatex(s2.p, s2.q, s2.c))}`,
       note: L(
         `Maak het aantal $y$ gelijk: ${parts.map((q) => q.nl).join(" en ")}. Alles in de rij keer hetzelfde getal.`,
         `Make the number of $y$ the same: ${parts.map((q) => q.en).join(" and ")}. Everything in the row times the same number.`,
@@ -106,12 +131,23 @@ export function eliminationSteps(r1: Row, r2: Row, m1: number, m2: number, op: "
     steps.push({ latex: `x=\\ask{${frac(x)}}\\land ${row2}`, note: L(`Balans: deel links en rechts door $${frac(k)}$.`, `Balance: divide both sides by $${frac(k)}$.`) });
   }
   steps.push({
-    latex: `x=${frac(x)}\\land ${frac(r2.p)}\\cdot\\hl{${paren(x)}}${r2.q.s < 0 ? "-" : "+"}${term(r2.q.abs(), "y")}=${frac(r2.c)}`,
+    latex: `x=${frac(x)}\\land ${coef(r2.p)}\\hl{${paren(x)}}${r2.q.s < 0 ? "-" : "+"}${term(r2.q.abs(), "y")}=${frac(r2.c)}`,
     note: L(`Vul $x=${frac(x)}$ in bij II.`, `Put $x=${frac(x)}$ into II.`),
   });
   const px = r2.p.mul(x);
-  for (const s of solveLinearSteps(r2.q, px, r2.c, "y", (t) => `x=${frac(x)}\\land ${t}`)) steps.push(s);
-  if (r2.q.equals(1) && px.equals(0)) steps.push({ latex: `x=${frac(x)}\\land y=\\ask{${frac(y)}}`, note: L("Reken uit.", "Work it out.") });
+  const wrap = (t: string) => `x=${frac(x)}\\land ${t}`;
+  if (px.equals(0)) {
+    // x = 0: the x-term drops out. Show that step, then divide if needed.
+    const zero = L(`$${frac(r2.p)}\\cdot 0=0$, dus die valt weg.`, `$${frac(r2.p)}\\cdot 0=0$, so it drops out.`);
+    if (r2.q.equals(1)) {
+      steps.push({ latex: wrap(`y=\\ask{${frac(y)}}`), note: zero });
+    } else {
+      steps.push({ latex: wrap(`${term(r2.q, "y")}=${frac(r2.c)}`), note: zero });
+      for (const s of solveLinearSteps(r2.q, px, r2.c, "y", wrap)) steps.push(s);
+    }
+  } else {
+    for (const s of solveLinearSteps(r2.q, px, r2.c, "y", wrap)) steps.push(s);
+  }
   return steps;
 }
 
@@ -223,3 +259,27 @@ export function equalSidesSteps(a1: Fraction, b1: Fraction, a2: Fraction, b2: Fr
   return [...steps, ...solveLinearSteps(k, d, e, "x", wrap)];
 }
 
+
+// ---------------------------------------------------------------------------
+// Worked examples for lessons and rule cards: the answer is computed, never typed.
+// ---------------------------------------------------------------------------
+
+const num = (v: Fraction) => v.valueOf();
+
+/** Intersection of `y = a1 x + b1` and `y = a2 x + b2` as a worked example. */
+export function intersectionExample(a1: Fraction, b1: Fraction, a2: Fraction, b2: Fraction) {
+  const { x, y } = meetPoint(a1, b1, a2, b2);
+  return { steps: intersectionSteps(a1, b1, a2, b2, lin(a1, b1), lin(a2, b2), x, y), solutions: [{ x: num(x), y: num(y) }] };
+}
+
+/** A system by elimination as a worked example. */
+export function eliminationExample(r1: Row, r2: Row, m1: number, m2: number, op: "add" | "sub") {
+  const { x, y } = solveRows(r1, r2);
+  return { steps: eliminationSteps(r1, r2, m1, m2, op, x, y), solutions: [{ x: num(x), y: num(y) }] };
+}
+
+/** The system `y = a x + b`, row II, by substitution as a worked example. */
+export function substitutionExample(a: Fraction, b: Fraction, r2: Row) {
+  const { x, y } = solveRows({ p: a.neg(), q: new Fraction(1), c: b }, r2);
+  return { steps: substitutionSteps("y", a, b, r2, x, y), solutions: [{ x: num(x), y: num(y) }] };
+}

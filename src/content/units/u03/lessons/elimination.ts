@@ -5,7 +5,7 @@
 import Fraction from "fraction.js";
 import type { Lesson } from "@/content/types";
 import { L } from "../helpers";
-import { eliminationSteps } from "../gen/solve";
+import { eliminationExample } from "../gen/solve";
 import { shapeSystemVisual } from "../gen/visuals";
 
 const F = (v: number) => new Fraction(v);
@@ -75,7 +75,7 @@ export const eliminationLesson: Lesson = {
       title: L("Voorbeeld: aftrekken", "Example: subtracting"),
       problem: L("Los op: $2x+y=11$ en $x+y=7$.", "Solve: $2x+y=11$ and $x+y=7$."),
       visual: shapeSystemVisual({ x: 2, y: 1, c: 11 }, { x: 1, y: 1, c: 7 }),
-      solution: { steps: eliminationSteps(row(2, 1, 11), row(1, 1, 7), 1, 1, "sub", F(4), F(3)), solutions: [{ x: 4, y: 3 }] },
+      solution: eliminationExample(row(2, 1, 11), row(1, 1, 7), 1, 1, "sub"),
     },
     {
       kind: "visual",
@@ -91,7 +91,7 @@ export const eliminationLesson: Lesson = {
       kind: "example",
       title: L("Voorbeeld: optellen", "Example: adding"),
       problem: L("Los op: $x+y=10$ en $x-y=2$.", "Solve: $x+y=10$ and $x-y=2$."),
-      solution: { steps: eliminationSteps(row(1, 1, 10), row(1, -1, 2), 1, 1, "add", F(6), F(4)), solutions: [{ x: 6, y: 4 }] },
+      solution: eliminationExample(row(1, 1, 10), row(1, -1, 2), 1, 1, "add"),
     },
     {
       kind: "visual",
@@ -107,7 +107,7 @@ export const eliminationLesson: Lesson = {
       kind: "example",
       title: L("Voorbeeld: eerst keer 3", "Example: first times 3"),
       problem: L("Los op: $x+y=5$ en $2x+3y=12$.", "Solve: $x+y=5$ and $2x+3y=12$."),
-      solution: { steps: eliminationSteps(row(1, 1, 5), row(2, 3, 12), 3, 1, "sub", F(3), F(2)), solutions: [{ x: 3, y: 2 }] },
+      solution: eliminationExample(row(1, 1, 5), row(2, 3, 12), 3, 1, "sub"),
     },
     {
       kind: "explain",

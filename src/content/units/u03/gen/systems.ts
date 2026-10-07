@@ -48,7 +48,7 @@ function matchY(q1: number, q2: number): [number, number] {
 }
 
 /** Parameters of an elimination system per difficulty. */
-function eliminationSystem(rng: Rng, difficulty: number, x: Fraction, y: Fraction): { r1: Row; r2: Row; m: [number, number]; op: "add" | "sub" } {
+function eliminationSystem(rng: Rng, difficulty: number, x: Fraction, y: Fraction, allowAdd = true): { r1: Row; r2: Row; m: [number, number]; op: "add" | "sub" } {
   if (difficulty === 1) {
     const q = rng.int(1, 2);
     const p1 = rng.int(2, 4);
@@ -65,7 +65,10 @@ function eliminationSystem(rng: Rng, difficulty: number, x: Fraction, y: Fractio
     const [m1, m2] = matchY(q1, q2);
     const p1 = rng.int(1, 4);
     const p2 = rng.int(1, 4);
-    if (p1 * m1 === p2 * m2) continue;
+    // Equal x-terms would make multiplying for y a detour; equal products would remove x too.
+    if (p1 === p2 || p1 * m1 === p2 * m2) continue;
+    // Sometimes the y-terms have opposite signs: then add.
+    if (allowAdd && rng.chance(0.4)) return { r1: mk(p1, q1, x, y), r2: mk(p2, -q2, x, y), m: [m1, m2], op: "add" };
     // The row that ends up with more x goes first, so the number of x stays positive.
     return p1 * m1 > p2 * m2
       ? { r1: mk(p1, q1, x, y), r2: mk(p2, q2, x, y), m: [m1, m2], op: "sub" }
@@ -76,11 +79,17 @@ function eliminationSystem(rng: Rng, difficulty: number, x: Fraction, y: Fractio
 function eliminationNudge(r1: Row, r2: Row, m: [number, number], op: "add" | "sub"): Loc {
   const q1 = frac(r1.q.abs());
   if (m[0] !== 1 || m[1] !== 1) {
-    const target = r1.q.mul(m[0]).abs();
-    return L(
-      `In I staat $${sum([[r1.q, "y"]])}$, in II $${sum([[r2.q, "y"]])}$. Maak er in allebei $${sum([[target, "y"]])}$ van. Trek ze dan van elkaar af.`,
-      `I has $${sum([[r1.q, "y"]])}$, II has $${sum([[r2.q, "y"]])}$. Make both $${sum([[target, "y"]])}$. Then subtract them.`,
-    );
+    const t1 = sum([[r1.q.mul(m[0]), "y"]]);
+    const t2 = sum([[r2.q.mul(m[1]), "y"]]);
+    return op === "sub"
+      ? L(
+          `In I staat $${sum([[r1.q, "y"]])}$, in II $${sum([[r2.q, "y"]])}$. Maak er in allebei $${t1}$ van. Trek ze dan van elkaar af.`,
+          `I has $${sum([[r1.q, "y"]])}$, II has $${sum([[r2.q, "y"]])}$. Make both $${t1}$. Then subtract them.`,
+        )
+      : L(
+          `In I staat $${sum([[r1.q, "y"]])}$, in II $${sum([[r2.q, "y"]])}$. Maak er $${t1}$ en $${t2}$ van. Tel ze dan op.`,
+          `I has $${sum([[r1.q, "y"]])}$, II has $${sum([[r2.q, "y"]])}$. Make them $${t1}$ and $${t2}$. Then add them.`,
+        );
   }
   return op === "sub"
     ? L(`In I en II staat allebei $+${q1 === "1" ? "" : q1}y$. Trek II van I af: dan valt $y$ weg.`, `Both I and II have $+${q1 === "1" ? "" : q1}y$. Subtract II from I: then $y$ drops out.`)
@@ -185,11 +194,14 @@ export const systemSubstitution: Generator = {
 // Word problems
 // ---------------------------------------------------------------------------
 
-type Shop = { x: Loc; y: Loc; xs: Loc; ys: Loc; who: Loc };
+/** A shop with two products and believable whole-euro prices for each. */
+type Shop = { x: Loc; y: Loc; xs: Loc; ys: Loc; who: Loc; px: [number, number]; py: [number, number] };
 const SHOPS: Shop[] = [
-  { x: L("broodje", "sandwich"), xs: L("broodjes", "sandwiches"), y: L("koffie", "coffee"), ys: L("koffie", "coffees"), who: L("In de kantine", "In the canteen") },
-  { x: L("ijsje", "ice cream"), xs: L("ijsjes", "ice creams"), y: L("flesje water", "bottle of water"), ys: L("flesjes water", "bottles of water"), who: L("Op het strand", "At the beach") },
-  { x: L("schrift", "notebook"), xs: L("schriften", "notebooks"), y: L("pen", "pen"), ys: L("pennen", "pens"), who: L("In de boekwinkel", "In the bookshop") },
+  { x: L("broodje", "sandwich"), xs: L("broodjes", "sandwiches"), y: L("koffie", "coffee"), ys: L("koffie", "coffees"), who: L("In de kantine", "In the canteen"), px: [3, 6], py: [2, 4] },
+  { x: L("ijsje", "ice cream"), xs: L("ijsjes", "ice creams"), y: L("flesje water", "bottle of water"), ys: L("flesjes water", "bottles of water"), who: L("Op het strand", "At the beach"), px: [2, 5], py: [1, 3] },
+  { x: L("schrift", "notebook"), xs: L("schriften", "notebooks"), y: L("pen", "pen"), ys: L("pennen", "pens"), who: L("In de boekwinkel", "In the bookshop"), px: [3, 7], py: [1, 4] },
+  { x: L("bioscoopkaartje", "cinema ticket"), xs: L("bioscoopkaartjes", "cinema tickets"), y: L("bak popcorn", "tub of popcorn"), ys: L("bakken popcorn", "tubs of popcorn"), who: L("In de bioscoop", "At the cinema"), px: [9, 15], py: [3, 7] },
+  { x: L("T-shirt", "T-shirt"), xs: L("T-shirts", "T-shirts"), y: L("pet", "cap"), ys: L("petten", "caps"), who: L("In de sportwinkel", "In the sports shop"), px: [12, 25], py: [6, 15] },
 ];
 
 type Plan = { thing: Loc; unit: Loc; units: Loc; fixed: Loc };
@@ -254,8 +266,8 @@ export const wordSystem: Generator = {
 
     // Shopping: two receipts.
     const shop = rng.pick(SHOPS);
-    const x = F(difficulty === 1 ? rng.int(2, 5) : rng.int(6, 12));
-    const y = F(difficulty === 1 ? rng.int(1, 4) : rng.int(2, 5));
+    const x = F(rng.int(shop.px[0], shop.px[1]));
+    const y = F(rng.int(shop.py[0], shop.py[1]));
     let r1: Row, r2: Row, m: [number, number];
     if (difficulty === 1) {
       const q = rng.int(1, 3);
@@ -265,7 +277,7 @@ export const wordSystem: Generator = {
       r2 = mk(p2, q, x, y);
       m = [1, 1];
     } else {
-      const sys = eliminationSystem(rng, 3, x, y);
+      const sys = eliminationSystem(rng, 3, x, y, false);
       r1 = sys.r1;
       r2 = sys.r2;
       m = sys.m;

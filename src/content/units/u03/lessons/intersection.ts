@@ -4,9 +4,9 @@
  */
 import Fraction from "fraction.js";
 import type { Lesson } from "@/content/types";
-import { L } from "../helpers";
-import { intersectionSteps } from "../gen/solve";
-import { meetVisual } from "../gen/visuals";
+import { custom, L } from "../helpers";
+import { intersectionExample } from "../gen/solve";
+import { meetVisual, W } from "../gen/visuals";
 
 const F = (v: number) => new Fraction(v);
 
@@ -33,8 +33,8 @@ export const intersectionLesson: Lesson = {
       kind: "explain",
       title: L("Twee lijnen", "Two lines"),
       body: L(
-        "Twee schuine lijnen kruisen elkaar in één punt.\nDat punt ligt op allebei.\nDaar hebben ze dezelfde $x$ én dezelfde $y$.",
-        "Two sloping lines cross at one point.\nThat point lies on both.\nThere they have the same $x$ and the same $y$.",
+        "Twee schuine lijnen kruisen elkaar meestal in één punt.\nDat punt ligt op allebei.\nDaar hebben ze dezelfde $x$ én dezelfde $y$.",
+        "Two sloping lines usually cross at one point.\nThat point lies on both.\nThere they have the same $x$ and the same $y$.",
       ),
     },
     {
@@ -93,7 +93,7 @@ export const intersectionLesson: Lesson = {
         ],
         0,
       ),
-      solution: { steps: intersectionSteps(F(2), F(1), F(-1), F(7), "2x+1", "-x+7", F(2), F(5)), solutions: [{ x: 2, y: 5 }] },
+      solution: intersectionExample(F(2), F(1), F(-1), F(7)),
     },
     {
       kind: "example",
@@ -106,7 +106,32 @@ export const intersectionLesson: Lesson = {
         ],
         0,
       ),
-      solution: { steps: intersectionSteps(F(3), F(-4), F(1), F(2), "3x-4", "x+2", F(3), F(5)), solutions: [{ x: 3, y: 5 }] },
+      solution: intersectionExample(F(3), F(-4), F(1), F(2)),
+    },
+    {
+      kind: "visual",
+      title: L("Evenwijdig: geen snijpunt", "Parallel: no intersection"),
+      body: L(
+        "$y=2x+3$ en $y=2x-1$ hebben dezelfde $a$.\nZe gaan allebei even steil omhoog.",
+        "$y=2x+3$ and $y=2x-1$ have the same $a$.\nThey both go up equally steeply.",
+      ),
+      visual: custom(
+        W.meet,
+        { lines: [{ a: "2", b: "3" }, { a: "2", b: "-1" }], start: 0, step: 1 },
+        L(
+          "De lijnen $y=2x+3$ en $y=2x-1$ lopen evenwijdig. Het verschil tussen de lijnen blijft overal even groot.",
+          "The lines $y=2x+3$ and $y=2x-1$ are parallel. The gap between the lines stays the same everywhere.",
+        ),
+      ),
+      task: L("Loop een paar stappen. Wordt het verschil ooit $0$?", "Walk a few steps. Does the gap ever become $0$?"),
+    },
+    {
+      kind: "explain",
+      title: L("Dezelfde a", "The same a"),
+      body: L(
+        "Zelfde $a$, ander startgetal: de lijnen zijn **evenwijdig**.\nZe snijden elkaar nooit.\nStel je ze gelijk, dan valt $x$ weg: $3=-1$. Dat klopt nooit. Dus: geen snijpunt.",
+        "Same $a$, different start value: the lines are **parallel**.\nThey never cross.\nIf you set them equal, $x$ drops out: $3=-1$. That is never true. So: no intersection.",
+      ),
     },
     {
       kind: "explain",

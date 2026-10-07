@@ -4,7 +4,7 @@
 import Fraction from "fraction.js";
 import type { Lesson } from "@/content/types";
 import { L } from "../helpers";
-import { eliminationSteps, intersectionSteps } from "../gen/solve";
+import { eliminationExample, intersectionExample } from "../gen/solve";
 import { meetVisual, shapeSystemVisual } from "../gen/visuals";
 
 const F = (v: number) => new Fraction(v);
@@ -61,13 +61,10 @@ export const wordSystemsLesson: Lesson = {
       kind: "example",
       title: L("Voorbeeld: twee bonnetjes", "Example: two receipts"),
       problem: L(
-        "$3$ broodjes en $1$ koffie kosten €$11$. $1$ broodje en $1$ koffie kosten €$5$. Wat kost een broodje ($x$) en een koffie ($y$)?",
-        "$3$ sandwiches and $1$ coffee cost €$11$. $1$ sandwich and $1$ coffee cost €$5$. What does a sandwich ($x$) and a coffee ($y$) cost?",
+        "$3$ broodjes en $1$ koffie kosten €$11$. $1$ broodje en $1$ koffie kosten €$5$. Wat kosten een broodje ($x$) en een koffie ($y$)?",
+        "$3$ sandwiches and $1$ coffee cost €$11$. $1$ sandwich and $1$ coffee cost €$5$. What do a sandwich ($x$) and a coffee ($y$) cost?",
       ),
-      solution: {
-        steps: eliminationSteps({ p: F(3), q: F(1), c: F(11) }, { p: F(1), q: F(1), c: F(5) }, 1, 1, "sub", F(3), F(2)),
-        solutions: [{ x: 3, y: 2 }],
-      },
+      solution: eliminationExample({ p: F(3), q: F(1), c: F(11) }, { p: F(1), q: F(1), c: F(5) }, 1, 1, "sub"),
     },
     {
       kind: "explain",
@@ -97,10 +94,7 @@ export const wordSystemsLesson: Lesson = {
       kind: "example",
       title: L("Voorbeeld: even duur", "Example: the same price"),
       problem: L("Wanneer kosten $y=20x+50$ en $y=30x$ evenveel? En hoeveel is dat?", "When do $y=20x+50$ and $y=30x$ cost the same? And how much is that?"),
-      solution: {
-        steps: intersectionSteps(F(20), F(50), F(30), F(0), "20x+50", "30x", F(5), F(150)),
-        solutions: [{ x: 5, y: 150 }],
-      },
+      solution: intersectionExample(F(20), F(50), F(30), F(0)),
     },
     {
       kind: "explain",

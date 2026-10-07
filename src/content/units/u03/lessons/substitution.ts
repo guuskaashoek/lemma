@@ -4,7 +4,7 @@
 import Fraction from "fraction.js";
 import type { Lesson } from "@/content/types";
 import { L } from "../helpers";
-import { substitutionSteps } from "../gen/solve";
+import { substitutionExample } from "../gen/solve";
 import { meetVisual } from "../gen/visuals";
 
 const F = (v: number) => new Fraction(v);
@@ -70,7 +70,7 @@ export const substitutionLesson: Lesson = {
       kind: "example",
       title: L("Voorbeeld", "Example"),
       problem: L("Los op: $y=2x$ en $x+y=9$.", "Solve: $y=2x$ and $x+y=9$."),
-      solution: { steps: substitutionSteps("y", F(2), F(0), { p: F(1), q: F(1), c: F(9) }, F(3), F(6)), solutions: [{ x: 3, y: 6 }] },
+      solution: substitutionExample(F(2), F(0), { p: F(1), q: F(1), c: F(9) }),
     },
     {
       kind: "example",
@@ -83,7 +83,7 @@ export const substitutionLesson: Lesson = {
         ],
         0,
       ),
-      solution: { steps: substitutionSteps("y", F(1), F(-1), { p: F(2), q: F(3), c: F(12) }, F(3), F(2)), solutions: [{ x: 3, y: 2 }] },
+      solution: substitutionExample(F(1), F(-1), { p: F(2), q: F(3), c: F(12) }),
     },
     {
       kind: "explain",

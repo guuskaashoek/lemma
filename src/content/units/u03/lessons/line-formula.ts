@@ -4,7 +4,7 @@
  */
 import type { Lesson } from "@/content/types";
 import { L } from "../helpers";
-import { findBSteps, twoPointSteps } from "../gen/line-formula";
+import { findBExample, twoPointExample } from "../gen/line-formula";
 import { lineLabVisual, slopeWalkVisual } from "../gen/visuals";
 
 export const lineFormulaLesson: Lesson = {
@@ -63,7 +63,7 @@ export const lineFormulaLesson: Lesson = {
       kind: "example",
       title: L("Voorbeeld: b berekenen", "Example: working out b"),
       problem: L("De lijn $y=2x+b$ gaat door $(3,\\ 10)$. Bereken $b$.", "The line $y=2x+b$ goes through $(3,\\ 10)$. Work out $b$."),
-      solution: { steps: findBSteps(2, 3, 10), solutions: [{ b: 4 }] },
+      solution: findBExample(2, 3, 10),
     },
     {
       kind: "explain",
@@ -91,7 +91,7 @@ export const lineFormulaLesson: Lesson = {
         "A line goes through $A(1,\\ 1)$ and $B(3,\\ 5)$. Work out $a$ and $b$ of $y=ax+b$.",
       ),
       visual: slopeWalkVisual([1, 1], [3, 5], { intercept: true }),
-      solution: { steps: twoPointSteps([1, 1], [3, 5]), solutions: [{ a: 2, b: -1 }] },
+      solution: twoPointExample([1, 1], [3, 5]),
     },
     {
       kind: "explain",

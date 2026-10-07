@@ -4,7 +4,7 @@
 import Fraction from "fraction.js";
 import type { RuleCard } from "@/content/types";
 import { L } from "./helpers";
-import { eliminationSteps, intersectionSteps, substitutionSteps } from "./gen/solve";
+import { eliminationExample, intersectionExample, substitutionExample } from "./gen/solve";
 
 const F = (v: number) => new Fraction(v);
 
@@ -125,8 +125,7 @@ export const rules: RuleCard[] = [
     lessonId: "u3.intersection",
     example: {
       problem: L("Bereken het snijpunt van $y=2x+1$ en $y=-x+7$.", "Work out the intersection of $y=2x+1$ and $y=-x+7$."),
-      steps: intersectionSteps(F(2), F(1), F(-1), F(7), "2x+1", "-x+7", F(2), F(5)),
-      solutions: [{ x: 2, y: 5 }],
+      ...intersectionExample(F(2), F(1), F(-1), F(7)),
     },
   },
   {
@@ -139,8 +138,7 @@ export const rules: RuleCard[] = [
     lessonId: "u3.elimination",
     example: {
       problem: L("Los op: $2x+y=11$ en $x+y=7$.", "Solve: $2x+y=11$ and $x+y=7$."),
-      steps: eliminationSteps({ p: F(2), q: F(1), c: F(11) }, { p: F(1), q: F(1), c: F(7) }, 1, 1, "sub", F(4), F(3)),
-      solutions: [{ x: 4, y: 3 }],
+      ...eliminationExample({ p: F(2), q: F(1), c: F(11) }, { p: F(1), q: F(1), c: F(7) }, 1, 1, "sub"),
     },
   },
   {
@@ -153,8 +151,7 @@ export const rules: RuleCard[] = [
     lessonId: "u3.substitution",
     example: {
       problem: L("Los op: $y=2x$ en $x+y=9$.", "Solve: $y=2x$ and $x+y=9$."),
-      steps: substitutionSteps("y", F(2), F(0), { p: F(1), q: F(1), c: F(9) }, F(3), F(6)),
-      solutions: [{ x: 3, y: 6 }],
+      ...substitutionExample(F(2), F(0), { p: F(1), q: F(1), c: F(9) }),
     },
   },
   {
@@ -170,8 +167,7 @@ export const rules: RuleCard[] = [
         "$3$ broodjes en $1$ koffie kosten €$11$. $1$ broodje en $1$ koffie kosten €$5$. $x$ is een broodje, $y$ een koffie.",
         "$3$ sandwiches and $1$ coffee cost €$11$. $1$ sandwich and $1$ coffee cost €$5$. $x$ is a sandwich, $y$ a coffee.",
       ),
-      steps: eliminationSteps({ p: F(3), q: F(1), c: F(11) }, { p: F(1), q: F(1), c: F(5) }, 1, 1, "sub", F(3), F(2)),
-      solutions: [{ x: 3, y: 2 }],
+      ...eliminationExample({ p: F(3), q: F(1), c: F(11) }, { p: F(1), q: F(1), c: F(5) }, 1, 1, "sub"),
     },
   },
 ];

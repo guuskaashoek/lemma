@@ -100,7 +100,7 @@ export function SlopeWalk({ props }: { props: Record<string, unknown> }) {
           />
         )}
         {st.step === 4 && p.reveal === false && l({ nl: "Loop over de lijn naar de y-as. Waar kom je uit?", en: "Walk along the line to the y-axis. Where do you end up?" })}
-        {st.step === 4 && p.reveal !== false && l({ nl: `Waar de lijn de y-as raakt: b = ${n(icpt)}.`, en: `Where the line meets the y-axis: b = ${n(icpt)}.` })}
+        {st.step === 4 && p.reveal !== false && l({ nl: `Waar de lijn de y-as snijdt: b = ${n(icpt)}.`, en: `Where the line crosses the y-axis: b = ${n(icpt)}.` })}
       </Say>
       {p.movable && st.step >= 3 && (
         <p className="text-center text-sm text-muted">

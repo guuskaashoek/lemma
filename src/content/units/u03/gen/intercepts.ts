@@ -5,7 +5,9 @@ import Fraction from "fraction.js";
 import { evaluate, parse } from "@/math/cas";
 import type { Mistake } from "@/math/check";
 import { frac, sum, term } from "@/math/latex";
-import type { Generator, Loc, Step } from "@/content/types";
+import type { GeneratedExercise, Generator, Loc, Step } from "@/content/types";
+import type { Rng } from "@/math/random";
+import { planeWindow } from "../widgets/model";
 import { den, F, intNot, L, lin } from "../helpers";
 import { meetVisual } from "./visuals";
 import { equationsHold, removeNote, rowLatex } from "./solve";
@@ -30,10 +32,13 @@ export function xInterceptSteps(a: Fraction, b: Fraction, shown = lin(a, b)): St
 export const xIntercept: Generator = {
   id: "u3.x-intercept",
   skillId: "u3.x-intercept",
-  title: L("Snijpunt met de $x$-as", "Intersection with the $x$-axis"),
+  title: L("Snijpunten met de assen", "Crossing the axes"),
   generate(rng, difficulty) {
-    // Standard form p x + q y = c only at difficulty 3, half of the time.
-    if (difficulty === 3 && rng.chance()) {
+    // Standard form p x + q y = c only at difficulty 3: a third asks for the
+    // x-axis, a third for the y-axis.
+    const form = difficulty === 3 ? rng.int(0, 2) : 2;
+    if (form === 1) return yAxisStandard(rng);
+    if (form === 0) {
       const p = F(rng.int(2, 6));
       const q = F(intNot(rng, -5, 5, [0]));
       let c = F(rng.nonZeroInt(-12, 12));
@@ -75,8 +80,8 @@ export const xIntercept: Generator = {
 
     let a: Fraction, b: Fraction;
     if (difficulty === 1) {
-      a = F(rng.int(2, 5));
-      b = a.mul(-rng.int(1, 6));
+      a = F(rng.int(2, 6));
+      b = a.mul(-rng.nonZeroInt(-6, 8));
     } else if (difficulty === 2) {
       a = F(intNot(rng, -5, 5, [0]));
       b = a.mul(-rng.nonZeroInt(-6, 6));
@@ -103,8 +108,8 @@ export const xIntercept: Generator = {
       mistakes.push({ id, latex: frac(v), explain });
     };
     add("sign", x0.neg(), L(`Let op het teken. $${frac(b)}$ naar de andere kant maakt $${frac(b.neg())}$.`, `Watch the sign. Moving $${frac(b)}$ to the other side makes $${frac(b.neg())}$.`));
-    add("y-axis", b, L(`$${frac(b)}$ is het snijpunt met de $y$-as (daar is $x=0$). Op de $x$-as is juist $y=0$.`, `$${frac(b)}$ is the intersection with the $y$-axis (there $x=0$). On the $x$-axis it is $y=0$.`));
-    add("upside-down", a.div(b.neg()), L(`Je deelde $${frac(a)}$ door $${frac(b.neg())}$. Het is andersom.`, `You divided $${frac(a)}$ by $${frac(b.neg())}$. It is the other way round.`));
+    add("y-axis", b, L(`Bij $x=0$ is $y=${frac(b)}$: dat is het snijpunt met de $y$-as. Op de $x$-as is juist $y=0$.`, `At $x=0$, $y=${frac(b)}$: that is the intersection with the $y$-axis. On the $x$-axis it is $y=0$.`));
+    if (!a.abs().equals(1)) add("upside-down", a.div(b.neg()), L(`Je deelde $${frac(a)}$ door $${frac(b.neg())}$. Het is andersom: $${frac(b.neg())}$ gedeeld door $${frac(a)}$.`, `You divided $${frac(a)}$ by $${frac(b.neg())}$. It is the other way round: $${frac(b.neg())}$ divided by $${frac(a)}$.`));
 
     const steps = xInterceptSteps(a, b, shown);
 
@@ -126,12 +131,55 @@ export const xIntercept: Generator = {
     };
   },
   verify(ex) {
-    // Independent check: (x, 0) must satisfy the equation of the line.
+    // Independent check: (x, 0) or (0, y) must satisfy the equation of the line.
     if (ex.answer.kind !== "solutions" || !ex.latex) return false;
-    const x = evaluate(parse(ex.answer.values[0]));
-    return x !== null && equationsHold([ex.latex], { x, y: 0 });
+    const v = evaluate(parse(ex.answer.values[0]));
+    if (v === null) return false;
+    return equationsHold([ex.latex], ex.answer.variable === "y" ? { x: 0, y: v } : { x: v, y: 0 });
   },
   isNice(ex) {
     return ex.answer.kind === "solutions" && den(new Fraction(evaluate(parse(ex.answer.values[0])) ?? 0).simplify(1e-9)) <= 6;
   },
 };
+
+/** Difficulty 3: the intersection of `p x + q y = c` with the y-axis (x = 0). */
+function yAxisStandard(rng: Rng): GeneratedExercise {
+  const p = F(intNot(rng, -5, 5, [0]));
+  const q = F(rng.int(2, 6));
+  let c = F(rng.nonZeroInt(-12, 12));
+  if (den(c.div(q)) === 1 && rng.chance()) c = c.add(1).equals(0) ? c.add(2) : c.add(1);
+  const y0 = c.div(q);
+  const eq = rowLatex(p, q, c);
+  const mistakes: Mistake[] = [];
+  const seen = [y0];
+  const add = (id: string, v: Fraction, explain: Loc) => {
+    if (seen.some((s) => s.equals(v))) return;
+    seen.push(v);
+    mistakes.push({ id, latex: frac(v), explain });
+  };
+  add("x-axis", c.div(p), L("Dat hoort bij het snijpunt met de $x$-as: daar is $y=0$. Op de $y$-as is juist $x=0$.", "That belongs to the intersection with the $x$-axis: there $y=0$. On the $y$-axis it is $x=0$."));
+  add("upside-down", q.div(c), L(`Je deelde $${frac(q)}$ door $${frac(c)}$. Het is andersom: $${frac(c)}$ gedeeld door $${frac(q)}$.`, `You divided $${frac(q)}$ by $${frac(c)}$. It is the other way round: $${frac(c)}$ divided by $${frac(q)}$.`));
+  const steps: Step[] = [
+    { latex: `${frac(p)}\\cdot\\hl{0}+${term(q, "y")}=${frac(c)}`, note: L("Op de $y$-as is $x=0$. Vul dat in.", "On the $y$-axis $x=0$. Put that in.") },
+    { latex: `${term(q, "y")}=\\ask{${frac(c)}}`, note: L(`$${frac(p)}\\cdot 0=0$, dus die valt weg.`, `$${frac(p)}\\cdot 0=0$, so it drops out.`) },
+    { latex: `y=\\ask{${frac(y0)}}`, note: L(`Balans: deel links en rechts door $${frac(q)}$.`, `Balance: divide both sides by $${frac(q)}$.`) },
+  ];
+  const slope = p.neg().div(q);
+  const win = planeWindow([[c.div(p).valueOf(), 0], [0, y0.valueOf()]], 8);
+  return {
+    prompt: L(
+      `Bereken het snijpunt van de lijn $${eq}$ met de $y$-as.\nGeef de $y$ van dat punt.`,
+      `Work out where the line $${eq}$ crosses the $y$-axis.\nGive the $y$ of that point.`,
+    ),
+    latex: eq,
+    visual: { kind: "plane", x: win.x, y: win.y, graphs: [{ latex: lin(slope, y0) }] },
+    answer: { kind: "solutions", variable: "y", values: [frac(y0)], form: "fraction" },
+    calculator: "off",
+    hints: {
+      nudge: L(`Op de $y$-as is $x=0$. Wat blijft er over van $${eq}$ als je $x=0$ invult?`, `On the $y$-axis $x=0$. What is left of $${eq}$ when you put in $x=0$?`),
+      rule: { text: X_AXIS_RULE, ruleId: "u3.axis-intercepts", metaphor: "balance" },
+      solution: { steps, solutions: [{ y: y0.valueOf() }] },
+    },
+    mistakes,
+  };
+}

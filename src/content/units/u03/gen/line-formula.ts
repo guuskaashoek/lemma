@@ -7,7 +7,7 @@ import { evaluate, parse } from "@/math/cas";
 import type { Mistake } from "@/math/check";
 import { frac, paren, term } from "@/math/latex";
 import type { Generator, Loc, Step } from "@/content/types";
-import { absL, den, F, intNot, L, minus, pt, propsOf, times, type Num } from "../helpers";
+import { absL, den, F, intNot, L, minus, pt, propsOf, signed, times, type Num } from "../helpers";
 import { toFrac, toNum } from "../widgets/model";
 import { simpleFraction } from "./graphs";
 import { SLOPE_RULE } from "./slope";
@@ -33,7 +33,7 @@ export function findBSteps(a: Num, px: Num, py: Num): Step[] {
   return [
     { latex: `${frac(py)}=${times(a, px, "hl")}+b`, note: L(`Vul het punt in: $x=${frac(px)}$ en $y=${frac(py)}$.`, `Put in the point: $x=${frac(px)}$ and $y=${frac(py)}$.`) },
     { latex: `${frac(py)}=\\ask{${frac(prod)}}+b`, note: L("Reken het keer-stuk uit.", "Work out the multiplication.") },
-    { latex: `${minus(py, prod)}=b`, note: balanceNote(prod) },
+    { latex: `${frac(py)}${signed(prod.neg())}=b`, note: balanceNote(prod) },
     { latex: `b=\\ask{${frac(b)}}`, note: L("Reken uit. Klaar!", "Work it out. Done!") },
   ];
 }
@@ -91,7 +91,7 @@ export const findB: Generator = {
       seen.push(v);
       mistakes.push({ id, latex: frac(v), explain });
     };
-    add("sign", py.add(prod), L(`Bij $${frac(py)}=${frac(prod)}+b$ moet $${frac(prod)}$ naar de andere kant. Dan wordt het $${minus(py, prod)}$, niet plus.`, `In $${frac(py)}=${frac(prod)}+b$ the $${frac(prod)}$ moves to the other side. That makes it $${minus(py, prod)}$, not plus.`));
+    add("sign", py.add(prod), L(`Bij $${frac(py)}=${frac(prod)}+b$ moet $${frac(prod)}$ naar de andere kant. Dan wordt het $${frac(py)}${signed(prod.neg())}$.`, `In $${frac(py)}=${frac(prod)}+b$ the $${frac(prod)}$ moves to the other side. That makes it $${frac(py)}${signed(prod.neg())}$.`));
     if (!px.equals(1)) add("forgot-x", py.sub(a), L(`Je vergat keer $x$. Reken eerst $${times(a, px)}$ uit.`, `You forgot times $x$. First work out $${times(a, px)}$.`));
     if (!py.equals(0)) add("took-y", py, L(`$${frac(py)}$ is de $y$ van het punt, niet $b$. Vul het punt in en los $b$ op.`, `$${frac(py)}$ is the $y$ of the point, not $b$. Put the point in and solve for $b$.`));
 
@@ -202,3 +202,15 @@ export const lineTwoPoints: Generator = {
     });
   },
 };
+
+/** The worked example "y = ax + b goes through (px, py): find b", answer computed. */
+export function findBExample(a: Num, px: Num, py: Num) {
+  return { steps: findBSteps(a, px, py), solutions: [{ b: F(py).sub(F(a).mul(px)).valueOf() }] };
+}
+
+/** The worked example "a and b of the line through A and B", answers computed. */
+export function twoPointExample(A: [Num, Num], B: [Num, Num]) {
+  const a = F(B[1]).sub(A[1]).div(F(B[0]).sub(A[0]));
+  const b = F(A[1]).sub(a.mul(A[0]));
+  return { steps: twoPointSteps(A, B), solutions: [{ a: a.valueOf(), b: b.valueOf() }] };
+}

@@ -47,7 +47,7 @@ const skills: Skill[] = [
   skill("u3.slope", ["Hellingsdriehoek", "Slope triangle"], "u3.slope", ["u3.slope"], ["u3.slope-two-points"]),
   skill("u3.find-b", ["Startgetal berekenen", "Working out the start value"], "u3.line-formula", ["u3.find-b"], ["u3.find-b"]),
   skill("u3.line-two-points", ["Formule bij twee punten", "Formula through two points"], "u3.line-formula", ["u3.slope", "u3.find-b"], ["u3.line-two-points"]),
-  skill("u3.x-intercept", ["Snijpunt met de x-as", "Crossing the x-axis"], "u3.axis-intercepts", ["u3.axis-intercepts"], ["u3.x-intercept"]),
+  skill("u3.x-intercept", ["Snijpunten met de assen", "Crossing the axes"], "u3.axis-intercepts", ["u3.axis-intercepts"], ["u3.x-intercept"]),
   skill("u3.intersection", ["Snijpunt van twee lijnen", "Intersection of two lines"], "u3.intersection", ["u3.intersection"], ["u3.intersection"]),
   skill("u3.elimination", ["Stelsels: optellen of aftrekken", "Systems: adding or subtracting"], "u3.elimination", ["u3.elimination"], ["u3.system-elimination"]),
   skill("u3.substitution", ["Stelsels: invullen", "Systems: substitution"], "u3.substitution", ["u3.substitution"], ["u3.system-substitution"]),

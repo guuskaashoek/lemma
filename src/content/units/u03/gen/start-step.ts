@@ -69,7 +69,7 @@ export const readAB: Generator = {
       if (a.s < 0) add("lost-minus", a.neg(), L(`Het minteken hoort erbij: vóór $x$ staat $${frac(a)}$.`, `The minus sign belongs to it: in front of $x$ there is $${frac(a)}$.`));
       if (a.abs().equals(1)) add("hidden-one", F(0), L(`Er staat geen getal vóór $x$, maar $${term(a, "x")}$ betekent $${frac(a)}\\cdot x$.`, `There is no number in front of $x$, but $${term(a, "x")}$ means $${frac(a)}\\cdot x$.`));
     } else {
-      if (!a.equals(0)) add("took-a", a, L(`$${frac(a)}$ staat vóór $x$: dat is de richtingscoëfficiënt. Het startgetal is het getal zonder $x$.`, `$${frac(a)}$ is in front of $x$: that is the slope. The start value is the number without $x$.`));
+      if (!a.equals(0)) add("took-a", a, L(`$${frac(a)}$ hoort bij $${term(a, "x")}$: dat is de richtingscoëfficiënt. Het startgetal is het getal zonder $x$.`, `$${frac(a)}$ belongs to $${term(a, "x")}$: that is the slope. The start value is the number without $x$.`));
       if (b.s < 0) add("lost-minus", b.neg(), L(`Het minteken hoort erbij: het startgetal is $${frac(b)}$.`, `The minus sign belongs to it: the start value is $${frac(b)}$.`));
     }
 
@@ -103,11 +103,15 @@ export const readAB: Generator = {
             ? L("Er staat geen $x$ in de formule. Hoeveel verandert $y$ dan per stap naar rechts?", "There is no $x$ in the formula. So how much does $y$ change per step to the right?")
             : L(
               written.length === 2 && bFirst
-                ? `Hier staat het startgetal vooraan. Zoek het getal dat vlak vóór $x$ staat, met zijn teken.`
-                : `Zoek het getal dat vlak vóór $x$ staat, met zijn teken. Staat er alleen $x$ of $-x$? Dan is het $1$ of $-1$.`,
+                ? `In $y=${f}$ staat het startgetal vooraan. Welk getal staat vlak vóór $x$, met zijn teken?`
+                : a.abs().equals(1)
+                  ? `In $y=${f}$ staat $${term(a, "x")}$. Dat betekent $${frac(a)}\\cdot x$.`
+                  : `In $y=${f}$: welk getal staat vlak vóór $x$, met zijn teken?`,
               written.length === 2 && bFirst
-                ? `Here the start value comes first. Find the number right in front of $x$, with its sign.`
-                : `Find the number right in front of $x$, with its sign. Is there just $x$ or $-x$? Then it is $1$ or $-1$.`,
+                ? `In $y=${f}$ the start value comes first. Which number is right in front of $x$, with its sign?`
+                : a.abs().equals(1)
+                  ? `In $y=${f}$ you see $${term(a, "x")}$. That means $${frac(a)}\\cdot x$.`
+                  : `In $y=${f}$: which number is right in front of $x$, with its sign?`,
             )
           : L(
               `Vul $x=0$ in: $y=${rhsAt(written, 0).replace(/\\hl\{0\}/g, "0")}$. Wat blijft er over?`,
@@ -162,8 +166,12 @@ function readAbRearrange(kind: number, rng: { int(a: number, b: number): number;
     note = L(`Maak $y$ alleen: deel beide kanten door $${k}$.`, `Get $y$ on its own: divide both sides by $${k}$.`);
   } else {
     // y - a x = b  (x on the left)
-    given = `y${a.s < 0 ? "+" : "-"}${term(a.abs(), "x")}=${frac(b)}`;
-    note = L(`Maak $y$ alleen: zet de $x$-term rechts. Wat links weggaat, doe je rechts ook.`, `Get $y$ on its own: move the $x$ term to the right. What goes on the left, you also do on the right.`);
+    const ax = term(a.abs(), "x");
+    given = `y${a.s < 0 ? "+" : "-"}${ax}=${frac(b)}`;
+    note =
+      a.s > 0
+        ? L(`Maak $y$ alleen: tel aan beide kanten $${ax}$ op.`, `Get $y$ on its own: add $${ax}$ to both sides.`)
+        : L(`Maak $y$ alleen: haal aan beide kanten $${ax}$ weg.`, `Get $y$ on its own: subtract $${ax}$ on both sides.`);
   }
   return {
     prompt: L(
@@ -262,23 +270,23 @@ export const formulaFromAB: Generator = {
           { latex: `y=\\ask{${f}}`, note: L("Reken uit en schrijf netjes.", "Work it out and write it neatly.") },
         ];
         nudge = L(
-          `Kijk naar het punt met $x=0$: dat geeft $b$. Hoeveel wordt $y$ groter (of kleiner) per stap?`,
-          `Look at the point with $x=0$: that gives $b$. How much does $y$ go up (or down) per step?`,
+          `Het punt $${pt(0, b)}$ ligt op de $y$-as: dat geeft $b$. Van $x=${x0}$ naar $x=${x0 + 1}$ gaat $y$ van $${frac(p0)}$ naar $${frac(p1)}$. Hoeveel is die stap?`,
+          `The point $${pt(0, b)}$ is on the $y$-axis: that gives $b$. From $x=${x0}$ to $x=${x0 + 1}$, $y$ goes from $${frac(p0)}$ to $${frac(p1)}$. How big is that step?`,
         );
       } else {
         steps = [
           {
             latex: `y=${term(a, "x")}+(${frac(p0)}-${x0}\\cdot ${paren(a)})`,
             note: L(
-              `$a=${frac(p1)}-${paren(p0)}=${frac(a)}$. Voor $b$ loop je terug van $x=${x0}$ naar $x=0$: $${x0}$ stappen, dus $${x0}\\cdot ${paren(a)}$ eraf.`,
-              `$a=${frac(p1)}-${paren(p0)}=${frac(a)}$. For $b$, walk back from $x=${x0}$ to $x=0$: $${x0}$ steps, so take off $${x0}\\cdot ${paren(a)}$.`,
+              `$a=${frac(p1)}-${paren(p0)}=${frac(a)}$. Voor $b$ loop je terug van $x=${x0}$ naar $x=0$: $${x0}$ ${x0 === 1 ? "stap" : "stappen"} van $${frac(a)}$. ${a.s < 0 ? "Terug gaat de lijn dus omhoog." : "Terug gaat de lijn dus omlaag."} Dat is $${frac(p0)}-${x0}\\cdot ${paren(a)}$.`,
+              `$a=${frac(p1)}-${paren(p0)}=${frac(a)}$. For $b$, walk back from $x=${x0}$ to $x=0$: $${x0}$ ${x0 === 1 ? "step" : "steps"} of $${frac(a)}$. ${a.s < 0 ? "Going back, the line goes up." : "Going back, the line goes down."} That is $${frac(p0)}-${x0}\\cdot ${paren(a)}$.`,
             ),
           },
           { latex: `y=\\ask{${f}}`, note: L("Reken uit en schrijf netjes.", "Work it out and write it neatly.") },
         ];
         nudge = L(
-          `$x=0$ staat er niet bij. Hoeveel verandert $y$ per stap? Loop dan $${x0}$ stappen terug naar $x=0$.`,
-          `$x=0$ is not there. How much does $y$ change per step? Then walk $${x0}$ steps back to $x=0$.`,
+          `$x=0$ staat er niet bij. Van $${frac(p0)}$ naar $${frac(p1)}$: hoeveel verandert $y$ per stap? Loop dan $${x0}$ ${x0 === 1 ? "stap" : "stappen"} terug naar $x=0$.`,
+          `$x=0$ is not there. From $${frac(p0)}$ to $${frac(p1)}$: how much does $y$ change per step? Then walk $${x0}$ ${x0 === 1 ? "step" : "steps"} back to $x=0$.`,
         );
       }
       visual = slopeWalkVisual([x0, p0], [x0 + 1, p1], { intercept: true, reveal: false });

@@ -52,7 +52,7 @@ export const startStepLesson: Lesson = {
     },
     {
       kind: "explain",
-      title: L("b: waar de lijn de y-as raakt", "b: where the line meets the y-axis"),
+      title: L("b: waar de lijn de y-as snijdt", "b: where the line crosses the y-axis"),
       body: L(
         "Op de $y$-as is $x=0$.\nVul $x=0$ in: $y=a\\cdot 0+b=b$.\nDus de lijn snijdt de $y$-as in $(0,\\ b)$.",
         "On the $y$-axis $x=0$.\nPut in $x=0$: $y=a\\cdot 0+b=b$.\nSo the line crosses the $y$-axis at $(0,\\ b)$.",
@@ -72,8 +72,8 @@ export const startStepLesson: Lesson = {
       kind: "explain",
       title: L("Omhoog, omlaag of vlak", "Up, down or flat"),
       body: L(
-        "Is $a$ positief? Dan gaat de lijn omhoog: **stijgend**.\nIs $a$ negatief? Dan gaat hij omlaag: **dalend**.\nIs $a=0$? Dan is de lijn vlak.\nHoe groter het getal, hoe steiler.",
-        "Is $a$ positive? Then the line goes up: **increasing**.\nIs $a$ negative? Then it goes down: **decreasing**.\nIs $a=0$? Then the line is flat.\nThe bigger the number, the steeper.",
+        "Is $a$ positief? Dan gaat de lijn omhoog: **stijgend**.\nIs $a$ negatief? Dan gaat hij omlaag: **dalend**.\nIs $a=0$? Dan is de lijn vlak.\nHoe verder $a$ van $0$ af ligt, hoe steiler. Dus $-3$ is steiler dan $2$.",
+        "Is $a$ positive? Then the line goes up: **increasing**.\nIs $a$ negative? Then it goes down: **decreasing**.\nIs $a=0$? Then the line is flat.\nThe further $a$ is from $0$, the steeper. So $-3$ is steeper than $2$.",
       ),
     },
     {

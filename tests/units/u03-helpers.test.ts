@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { getRule } from "@/content/rules";
 import { bundle } from "@/content/units/u03";
 import { lin, pt, signed, times } from "@/content/units/u03/helpers";
-import { equationsHold, systemEquations, systemLatex } from "@/content/units/u03/gen/solve";
+import { equationsHold, meetPoint, solveRows, systemEquations, systemLatex } from "@/content/units/u03/gen/solve";
 import { combine, gridStep, linTex, meet, numLabel, numTex, planeWindow, stairs, toFrac, toNum } from "@/content/units/u03/widgets/model";
 
 describe("u3 latex helpers", () => {
@@ -23,6 +23,20 @@ describe("u3 latex helpers", () => {
     expect(signed(-4)).toBe("-4");
     expect(signed(4)).toBe("+4");
     expect(signed(0)).toBe("");
+  });
+});
+
+describe("u3 solvers for worked examples", () => {
+  const F = (v: number) => new Fraction(v);
+  it("finds where two lines meet", () => {
+    const { x, y } = meetPoint(F(2), F(1), F(-1), F(7));
+    expect([x.valueOf(), y.valueOf()]).toEqual([2, 5]);
+  });
+  it("solves a 2x2 system, checked by putting the answer back in", () => {
+    const r1 = { p: F(1), q: F(1), c: F(5) };
+    const r2 = { p: F(2), q: F(3), c: F(12) };
+    const { x, y } = solveRows(r1, r2);
+    expect(equationsHold(["x+y=5", "2x+3y=12"], { x: x.valueOf(), y: y.valueOf() })).toBe(true);
   });
 });
 

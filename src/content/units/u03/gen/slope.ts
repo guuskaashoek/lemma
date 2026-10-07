@@ -30,7 +30,13 @@ export function slopeMistakes(dy: Fraction, dx: Fraction): Mistake[] {
   if (!dy.equals(0)) {
     add("upside-down", dx.div(dy), L("Je deelde opzij door omhoog. Het is andersom: verschil in $y$ boven, verschil in $x$ onder.", "You divided sideways by up. It is the other way round: change in $y$ on top, change in $x$ below."));
   }
-  add("sign", a.neg(), L("Het teken klopt niet. Gaat de lijn naar rechts omlaag? Dan is $a$ negatief. Neem boven en onder dezelfde volgorde.", "The sign is wrong. Does the line go down to the right? Then $a$ is negative. Use the same order on top and below."));
+  add(
+    "sign",
+    a.neg(),
+    a.s < 0
+      ? L("Het teken klopt niet. De lijn gaat naar rechts omlaag, dus $a$ is negatief. Neem boven en onder dezelfde volgorde.", "The sign is wrong. The line goes down to the right, so $a$ is negative. Use the same order on top and below.")
+      : L("Het teken klopt niet. De lijn gaat naar rechts omhoog, dus $a$ is positief. Neem boven en onder dezelfde volgorde.", "The sign is wrong. The line goes up to the right, so $a$ is positive. Use the same order on top and below."),
+  );
   if (!dx.abs().equals(1)) add("no-divide", dy, L(`Je bent vergeten te delen door het verschil in $x$: $${absL(dx)}$.`, `You forgot to divide by the change in $x$: $${absL(dx)}$.`));
   return out;
 }
@@ -63,7 +69,6 @@ export const slopeTwoPoints: Generator = {
     if (difficulty === 3 && rng.chance()) [A, B] = [B, A];
     const dyF = F(B[1]).sub(A[1]);
     const dxF = F(B[0]).sub(A[0]);
-    const simplifies = !dxF.abs().equals(1) || dxF.s < 0;
 
     return {
       prompt: L(
@@ -93,9 +98,12 @@ export const slopeTwoPoints: Generator = {
                 `On top: $${minus(B[1], A[1])}$. Below: $${minus(B[0], A[0])}=${frac(dxF)}$.`,
               ),
             },
-            ...(simplifies
-              ? [{ latex: `\\ask{${frac(a)}}`, note: L("Deel uit of vereenvoudig de breuk.", "Divide, or simplify the fraction.") }]
-              : []),
+            {
+              latex: `\\ask{${frac(a)}}`,
+              note: dxF.equals(1)
+                ? L("Delen door $1$ verandert niets.", "Dividing by $1$ changes nothing.")
+                : L("Deel uit of vereenvoudig de breuk.", "Divide, or simplify the fraction."),
+            },
           ],
         },
       },
