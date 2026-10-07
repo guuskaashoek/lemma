@@ -18,6 +18,7 @@
  *   `y=2x+1 → y=2x-1` fail, even without known solutions.
  */
 import { ce, closeEnough, equivalent, freeVariables, isInvalid, parse, type BoxedExpr, type MathJson } from "./cas";
+import { compile } from "@cortex-js/compute-engine";
 import { normalizeLatex } from "./normalize";
 import { createRng } from "./random";
 
@@ -72,6 +73,32 @@ function valueAt(expr: BoxedExpr, point: Record<string, number>): number | null 
   return typeof r.re === "number" && Number.isFinite(r.re) ? r.re : null;
 }
 
+/**
+ * A fast numeric evaluator for an expression: compiled JavaScript when the
+ * Compute Engine can compile it (checked against the CAS at one point),
+ * otherwise the slower CAS evaluation.
+ */
+function fastEvaluator(expr: BoxedExpr): (p: Record<string, number>) => number | null {
+  const slow = (p: Record<string, number>) => valueAt(expr, p);
+  try {
+    const compiled = compile(expr as never) as unknown as { success?: boolean; run?: (v: Record<string, number>) => unknown };
+    if (!compiled?.run || compiled.success === false) return slow;
+    const fast = (p: Record<string, number>) => {
+      const v = compiled.run!(p);
+      return typeof v === "number" && Number.isFinite(v) ? v : null;
+    };
+    // Sanity check against the CAS before trusting the compiled code.
+    const probe: Record<string, number> = {};
+    for (const v of freeVariables(expr)) probe[v] = 1.2345;
+    const a = slow(probe);
+    const b = fast(probe);
+    if (a !== null && (b === null || !closeEnough(a, b, 1e-9))) return slow;
+    return fast;
+  } catch {
+    return slow;
+  }
+}
+
 export type StepCheck = { ok: true } | { ok: false; index: number; reason: string };
 
 export type StepOptions = {
@@ -102,8 +129,11 @@ function pointsOnEquation(f: BoxedExpr, vars: string[], seed: string, wanted = 6
   const rng = createRng(`roots:${seed}`);
   const out: Array<Record<string, number>> = [];
   if (vars.length === 0) return out;
-  const value = (p: Record<string, number>) => valueAt(f, p);
-  for (let attempt = 0; attempt < wanted * 4 && out.length < wanted; attempt++) {
+  const value = fastEvaluator(f);
+  // Hard time budget: root finding is a bonus check and must never make a
+  // test run hang (e.g. equations without roots in the scanned range).
+  const deadline = performance.now() + 250;
+  for (let attempt = 0; attempt < wanted * 4 && out.length < wanted && performance.now() < deadline; attempt++) {
     const solveFor = vars[attempt % vars.length];
     const base: Record<string, number> = {};
     for (const v of vars) if (v !== solveFor) base[v] = Math.round(rng.sign() * (0.2 + rng.next() * 4.8) * 1e3) / 1e3;
