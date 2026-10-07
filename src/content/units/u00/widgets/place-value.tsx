@@ -8,7 +8,7 @@
 import Fraction from "fraction.js";
 import { useState } from "react";
 import { dec } from "../helpers";
-import { Btn, Tex, UI, useLoc } from "./kit";
+import { Btn, Tex, UI, useLoc, useSteps } from "./kit";
 
 type Props = { value: string; factor?: number; op?: "*" | ":" };
 
@@ -32,13 +32,20 @@ function digitsOf(value: string): Array<{ digit: string; power: number }> {
 export function PlaceValue({ props }: { props: Record<string, unknown> }) {
   const { value, factor = 10, op = "*" } = props as Props;
   const { l, locale } = useLoc();
-  const [shift, setShift] = useState(0);
+  const [manual, setManual] = useState(0);
   const digits = digitsOf(value);
   const top = Math.max(...digits.map((d) => d.power));
   const low = Math.min(...digits.map((d) => d.power));
+  const target = Math.round(Math.log10(factor)) * (op === "*" ? 1 : -1);
+  // "Show me" moves one place at a time; its timers stop on reset and unmount.
+  const auto = useSteps(Math.abs(target), 700);
+  const shift = auto.step > 0 ? Math.sign(target) * auto.step : manual;
+  const setShift = (next: number) => {
+    auto.reset();
+    setManual(next);
+  };
   const canLeft = top + shift < 3;
   const canRight = low + shift > -3;
-  const target = Math.round(Math.log10(factor)) * (op === "*" ? 1 : -1);
   const current = new Fraction(value).mul(new Fraction(10).pow(shift));
 
   const COL = 64;
@@ -51,13 +58,6 @@ export function PlaceValue({ props }: { props: Record<string, unknown> }) {
   for (let p = 0; p < low + shift; p++) zeros.push(p);
   for (let p = 0; p > top + shift; p--) zeros.push(p);
 
-  const play = () => {
-    // Step one place at a time towards the target, so the movement is visible.
-    setShift(0);
-    for (let i = 1; i <= Math.abs(target); i++) {
-      setTimeout(() => setShift(Math.sign(target) * i), 700 * i);
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -99,14 +99,14 @@ export function PlaceValue({ props }: { props: Record<string, unknown> }) {
         {l({ nl: "De komma blijft staan. De cijfers schuiven.", en: "The decimal point stays. The digits move." })}
       </p>
       <div className="flex flex-wrap justify-center gap-2">
-        <Btn onClick={() => setShift((s) => s + 1)} disabled={!canLeft}>
+        <Btn onClick={() => setShift(shift + 1)} disabled={!canLeft || auto.playing}>
           {l({ nl: "× 10 (naar links)", en: "× 10 (to the left)" })}
         </Btn>
-        <Btn onClick={() => setShift((s) => s - 1)} disabled={!canRight}>
+        <Btn onClick={() => setShift(shift - 1)} disabled={!canRight || auto.playing}>
           {l({ nl: ": 10 (naar rechts)", en: ": 10 (to the right)" })}
         </Btn>
         {target !== 0 && (
-          <Btn onClick={play}>
+          <Btn onClick={auto.play} disabled={auto.playing}>
             {`▶ ${op === "*" ? "×" : ":"} ${factor}`}
           </Btn>
         )}

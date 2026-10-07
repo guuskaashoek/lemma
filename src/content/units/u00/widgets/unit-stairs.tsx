@@ -6,7 +6,7 @@
  */
 import Fraction from "fraction.js";
 import { useState } from "react";
-import { Btn, numText, UI, useLoc } from "./kit";
+import { Btn, numText, UI, useLoc, useSteps } from "./kit";
 import { ALIAS, STAIRS, STEP, type UnitKind } from "./unit-model";
 
 type Props = { kind: UnitKind; from: string; to: string; value: number };
@@ -17,7 +17,14 @@ export function UnitStairs({ props }: { props: Record<string, unknown> }) {
   const units = STAIRS[kind];
   const start = units.indexOf(from);
   const goal = units.indexOf(to);
-  const [pos, setPos] = useState(start);
+  const [manual, setManual] = useState(start);
+  // "Walk" goes one stair at a time; its timers stop on reset and unmount.
+  const auto = useSteps(Math.abs(goal - start), 800);
+  const pos = auto.step > 0 ? start + Math.sign(goal - start) * auto.step : manual;
+  const setPos = (next: number) => {
+    auto.reset();
+    setManual(next);
+  };
   const step = STEP[kind];
   const current = new Fraction(value).mul(new Fraction(step).pow(pos - start));
 
@@ -28,11 +35,6 @@ export function UnitStairs({ props }: { props: Record<string, unknown> }) {
   const stairX = (i: number) => 20 + i * SW;
   const stairY = (i: number) => 70 + i * SH;
 
-  const walk = () => {
-    setPos(start);
-    const dir = Math.sign(goal - start);
-    for (let k = 1; k <= Math.abs(goal - start); k++) setTimeout(() => setPos(start + dir * k), 800 * k);
-  };
 
   return (
     <div className="space-y-4">
@@ -77,14 +79,14 @@ export function UnitStairs({ props }: { props: Record<string, unknown> }) {
         })}
       </p>
       <div className="flex flex-wrap justify-center gap-2">
-        <Btn onClick={() => setPos((p) => Math.max(0, p - 1))} disabled={pos === 0}>
+        <Btn onClick={() => setPos(Math.max(0, pos - 1))} disabled={pos === 0 || auto.playing}>
           {l({ nl: `↑ Omhoog (: ${step})`, en: `↑ Up (: ${step})` })}
         </Btn>
-        <Btn onClick={() => setPos((p) => Math.min(units.length - 1, p + 1))} disabled={pos === units.length - 1}>
+        <Btn onClick={() => setPos(Math.min(units.length - 1, pos + 1))} disabled={pos === units.length - 1 || auto.playing}>
           {l({ nl: `↓ Omlaag (× ${step})`, en: `↓ Down (× ${step})` })}
         </Btn>
         {goal !== start && (
-          <Btn onClick={walk}>
+          <Btn onClick={auto.play} disabled={auto.playing}>
             {l({ nl: `▶ Naar ${to}`, en: `▶ To ${to}` })}
           </Btn>
         )}
