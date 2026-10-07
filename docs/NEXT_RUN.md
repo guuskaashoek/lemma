@@ -7,12 +7,12 @@ What is built, what is left, and how to run the next batch of units.
 | Unit | Topic | Status |
 |---|---|---|
 | 0 | Opfrissen | ✅ Built, reviewed and merged into `main` (10 lessons, 23 generators, 12 unit widgets) |
-| 1 | Fundament | 🔄 Being finished and reviewed (run `wf_b3fa3681-3ef`) |
-| 2 | Algebra | 🔄 Being finished and reviewed (contains the reference lesson `u2.balance`) |
-| 3 | Lineaire functies | 🔄 Being finished and reviewed |
-| 4 | Kwadratische functies | 🔄 Being finished and reviewed |
-| 5 | Exponentiële functies en logaritmen | 🔄 Being finished and reviewed |
-| 6 | Goniometrie | 🔄 Being finished and reviewed |
+| 1 | Fundament | ⏸ Built and committed in worktree `-4` (9 lessons); review not done |
+| 2 | Algebra | ⏸ Half built, uncommitted, in worktree `-5` (6 lessons, incl. the reference lesson `u2.balance`) |
+| 3 | Lineaire functies | ⏸ Built and committed in worktree `-6` (9 lessons); review not done |
+| 4 | Kwadratische functies | ⏸ Half built, uncommitted, in worktree `-7` (5 lessons) |
+| 5 | Exponentiële functies en logaritmen | ⏸ Half built, uncommitted, in worktree `-8` (4 lessons, needs at least 5) |
+| 6 | Goniometrie | ⏸ Half built, uncommitted, in worktree `-9` (8 lessons) |
 | 7 | Differentiëren | ⏳ To do |
 | 8 | Integreren | ⏳ To do |
 | 9 | Vectoren en lineaire algebra | ⏳ To do |
@@ -20,7 +20,11 @@ What is built, what is left, and how to run the next batch of units.
 | 11 | Logica, verzamelingen en bewijzen | ⏳ To do |
 | 12 | WO-brug: wiskunde voor AI | ⏳ To do |
 
-Units 1–6 still have to be merged into `main` once their run finishes (see *After a run* below). Update this table when that is done.
+Units 1–6 were paused on 2026-10-07 because the machine was overloaded (about 50 Node processes). Their work is kept:
+- in the worktrees `.claude/worktrees/wf_ae42accd-91f-4` … `-9` (units 1 … 6, in that order);
+- in a backup copy of `src/`, `tests/` and `scratch/` per worktree (made in the session scratchpad).
+
+Continue them **first**, before units 7–12 (see *Continuing paused units*).
 
 ## Before the next run: platform fixes
 
@@ -44,6 +48,19 @@ These came up while building units 0–6. Units 7–12 depend on several of them
    - vector arrows
    - probability trees
 
+## Keep the machine calm
+
+The second run overloaded an 8-core Mac. Six agents each ran full `vitest` suites, some for over 30 minutes, and some fanned out 7 parallel `tsx` scripts. Stopped workflows also left orphaned `vitest` workers running. Next time:
+
+- **Run at most 2 units at the same time.** Pass 2 unit numbers per run (`args: [7, 8]`), or lower the concurrency in the script.
+- **Fix the slow step checker first** (platform fix 3). It is the most likely reason a test run hangs for half an hour.
+- Tell agents to run the full suite only at the end, to use `-t "uN\."` while iterating, and to never start several test or `tsx` processes in parallel.
+- After stopping a workflow, check for leftovers with `ps -Ao pid,command | grep guuslab/Wiskunde` and kill them.
+
+## Continuing paused units
+
+For each unit 1–6, run one agent (no new worktree) that `cd`s into its existing worktree, inspects what is there, completes the unit and commits. Then run one review agent on that branch. Do 2 units at a time. The continuation prompt used for this is in `docs/workflows/build-units.js` (`buildPrompt`). Prefix it with: *"An earlier agent started this task and was stopped halfway. Work in `<worktree path>`; keep what is good and complete the rest."*
+
 ## How to run units 7–12
 
 The workflow script lives in the repo: [`docs/workflows/build-units.js`](workflows/build-units.js).
@@ -54,8 +71,8 @@ The workflow script lives in the repo: [`docs/workflows/build-units.js`](workflo
    Workflow({ scriptPath: "docs/workflows/build-units.js", args: [7, 8, 9, 10, 11, 12] })
    ```
    It builds each unit in its own git worktree, then runs a strict review agent on that branch.
-   - Concurrency is limited by the machine (about 6 agents on an 8-core Mac), so the 6 units run as one wave.
-   - A run of 6 units takes several hours.
+   - Without arguments it would build all six at once. Don't: run 2 at a time (see *Keep the machine calm*).
+   - Expect a few hours per pair of units.
 3. To build only some units, pass fewer numbers, e.g. `args: [7, 8]`.
 
 ### Things learned from the first run
