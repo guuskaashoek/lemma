@@ -49,3 +49,6 @@ next-env.d.ts
 
 # workflow worktrees
 /.claude/worktrees
+
+# SQLite database of the Jet deploy (bind-mounted next to the repo; never commit it)
+/lemma.db*

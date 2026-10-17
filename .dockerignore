@@ -4,3 +4,4 @@ data
 coverage
 .env*
 .git
+lemma.db*

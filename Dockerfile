@@ -13,8 +13,10 @@ RUN npm run build && npm prune --omit=dev
 FROM node:24-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 DATABASE_PATH=/app/data/lemma.db
-COPY --from=build /app /app
+COPY --from=build --chown=node:node /app /app
 # Migrations in /app/drizzle run on startup; mount the database file to keep it across deploys.
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data && chown node:node /app/data
+# No root inside the container: the bind-mounted SQLite files stay writable for uid 1000.
+USER node
 EXPOSE 3000
 CMD ["npm", "start"]

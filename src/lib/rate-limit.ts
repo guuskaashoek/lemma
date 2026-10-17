@@ -48,9 +48,12 @@ export function hit(key: string, max: number, windowMs: number): boolean {
 /** Limits per IP and per e-mail address at once; both must allow the request. */
 export async function allowAuthAttempt(kind: "login" | "register" | "reset", email?: string): Promise<boolean> {
   const ip = await clientIp();
+  // Behind GuusLab Jet every request arrives from the same proxy address, so the
+  // "ip" limit acts as a global ceiling. Keep it high enough that one attacker
+  // cannot lock everybody out; the per-e-mail limit stops guessing one password.
   const rules = {
-    login: { ip: [20, 15 * 60_000], email: [5, 15 * 60_000] },
-    register: { ip: [5, 60 * 60_000], email: [3, 60 * 60_000] },
+    login: { ip: [100, 15 * 60_000], email: [5, 15 * 60_000] },
+    register: { ip: [20, 60 * 60_000], email: [3, 60 * 60_000] },
     reset: { ip: [10, 15 * 60_000], email: [5, 15 * 60_000] },
   } as const;
   const r = rules[kind];
