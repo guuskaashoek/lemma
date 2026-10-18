@@ -5,7 +5,8 @@
  *   handled by an admin who creates a one-time reset link (see
  *   `src/lib/password-reset.ts`).
  * - Passwords are hashed by Better Auth (scrypt).
- * - Built-in rate limiting protects the public `/api/auth/*` endpoints.
+ * - Only a few `/api/auth/*` endpoints are reachable over HTTP (see the route
+ *   handler); built-in rate limiting stays on as a second layer.
  * - Nobody becomes admin by registering: e-mail addresses are not verified,
  *   so admin rights are only granted from the server (`npm run make-admin`).
  *   Our own server actions add a second limiter (`src/lib/rate-limit.ts`).

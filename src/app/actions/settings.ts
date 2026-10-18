@@ -46,13 +46,15 @@ export async function setLocaleAction(locale: Locale): Promise<void> {
 }
 
 export async function changePasswordAction(_prev: FormState, form: FormData): Promise<FormState> {
-  await requireUser();
+  const user = await requireUser();
   const { t } = await getT();
   const parsed = changePasswordSchema.safeParse({
     currentPassword: form.get("currentPassword"),
     newPassword: form.get("newPassword"),
   });
   if (!parsed.success) return { error: t("errPasswordShort") };
+  // The current password is checked here, so guessing it counts like a login.
+  if (!(await allowAuthAttempt("login", user.email))) return { error: t("errTooMany") };
   try {
     await auth.api.changePassword({
       body: { ...parsed.data, revokeOtherSessions: true },
