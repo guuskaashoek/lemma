@@ -6,7 +6,11 @@
  *   `src/lib/password-reset.ts`).
  * - Passwords are hashed by Better Auth (scrypt).
  * - Only a few `/api/auth/*` endpoints are reachable over HTTP (see the route
- *   handler); built-in rate limiting stays on as a second layer.
+ *   handler). Better Auth's own rate limiter is off: it keys on the forgeable
+ *   X-Forwarded-For header and stored one row per (ip, path) that it never
+ *   deleted, so anonymous requests with made-up addresses grew the database
+ *   without bound. The remaining HTTP endpoints (ok, get-session, sign-out)
+ *   need no limit, and server actions never went through it anyway.
  * - Nobody becomes admin by registering: e-mail addresses are not verified,
  *   so admin rights are only granted from the server (`npm run make-admin`).
  *   Our own server actions add a second limiter (`src/lib/rate-limit.ts`).
@@ -42,16 +46,7 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,
   },
-  rateLimit: {
-    enabled: true,
-    storage: "database",
-    window: 60,
-    max: 100,
-    customRules: {
-      "/sign-in/email": { window: 60, max: 5 },
-      "/sign-up/email": { window: 60 * 10, max: 3 },
-    },
-  },
+  rateLimit: { enabled: false },
   plugins: [
     admin(),
     // Lets server actions set the session cookie. Must be the last plugin.

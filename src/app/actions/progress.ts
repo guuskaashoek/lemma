@@ -5,7 +5,16 @@
  */
 import { z } from "zod";
 import { getLessonEntry, getUnit } from "@/content/curriculum";
-import { addActivity, completeLesson, recordAttempt, recordFinalHints, recordTest, scheduleSkills } from "@/lib/progress";
+import {
+  addActivity,
+  completeLesson,
+  getRoadmap,
+  recordAttempt,
+  recordFinalHints,
+  recordTest,
+  scheduleSkills,
+} from "@/lib/progress";
+import { hit } from "@/lib/rate-limit";
 import { lessonXp, REVIEW_XP_PER_EXERCISE, TEST_XP, testPassed } from "@/lib/progress-logic";
 import { requireUser } from "@/lib/session";
 import {
@@ -21,6 +30,9 @@ const outcomesSchema = z.record(z.string().max(100), z.enum(["again", "hard", "g
 export async function recordAttemptAction(input: AttemptInput): Promise<void> {
   const user = await requireUser();
   const a = attemptSchema.parse(input);
+  // Every call adds a row. Far above honest use, but stops one account from
+  // filling the disk by calling the action in a loop.
+  if (!hit(`attempt:user:${user.id}`, 1500, 60 * 60_000)) return;
   recordAttempt(user.id, {
     mode: a.mode,
     contextId: a.contextId,
@@ -47,7 +59,12 @@ export async function completeLessonAction(
 ): Promise<{ xp: number }> {
   const user = await requireUser();
   const data = completeLessonSchema.parse(input);
-  if (!getLessonEntry(data.lessonId)) throw new Error("Unknown lesson");
+  const entry = getLessonEntry(data.lessonId);
+  if (!entry) throw new Error("Unknown lesson");
+  // Same rule as the lesson page: a locked lesson cannot be completed.
+  const unitState = getRoadmap(user.id).find((r) => r.unit.id === entry.unit.id);
+  const state = unitState?.lessons.find((l) => l.id === data.lessonId)?.state;
+  if (!state || state === "locked") throw new Error("Lesson is locked");
   const xp = lessonXp(data.correctFirstTry, data.total);
   completeLesson(user.id, data.lessonId, data.correctFirstTry / data.total, xp);
   addActivity(user.id, xp, data.seconds);

@@ -6,18 +6,21 @@
  * counters live in SQLite, so they survive a restart.
  */
 import "server-only";
+import { isIP } from "node:net";
 import { eq, lt } from "drizzle-orm";
 import { headers } from "next/headers";
 import { db, schema } from "@/db";
 
-/** Best-effort client IP (works behind a reverse proxy that sets the header). */
+/**
+ * Best-effort client IP (works behind a reverse proxy that sets the header).
+ * The header is visitor-controlled, so anything that is not an IP address
+ * collapses into one bucket instead of becoming a long, unique counter key.
+ */
 export async function clientIp(): Promise<string> {
   const h = await headers();
-  return (
-    h.get("x-forwarded-for")?.split(",")[0].trim() ||
-    h.get("x-real-ip") ||
-    "local"
-  );
+  const ip = (h.get("x-forwarded-for")?.split(",")[0] || h.get("x-real-ip") || "").trim();
+  if (!ip) return "local";
+  return isIP(ip) ? ip : "invalid";
 }
 
 /**
