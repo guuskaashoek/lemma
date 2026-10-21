@@ -28,7 +28,11 @@ export async function getPrefs(): Promise<Prefs> {
   let parsed: Partial<Prefs> = {};
   if (raw) {
     try {
-      parsed = JSON.parse(raw);
+      const value: unknown = JSON.parse(raw);
+      // `null`, numbers and arrays are valid JSON too; only an object is usable.
+      // The cookie can be set by a sibling *.guuss.com site, so a bad value
+      // must never crash the page.
+      if (value && typeof value === "object" && !Array.isArray(value)) parsed = value as Partial<Prefs>;
     } catch {
       // Ignore a broken cookie.
     }
