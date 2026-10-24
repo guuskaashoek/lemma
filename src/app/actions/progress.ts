@@ -25,7 +25,13 @@ import {
   type AttemptInput,
 } from "@/lib/validation";
 
-const outcomesSchema = z.record(z.string().max(100), z.enum(["again", "hard", "good"]));
+// A session touches a handful of skills. The size check runs before the record
+// is parsed, so a huge object is refused without validating every entry.
+const MAX_OUTCOMES = 500;
+const outcomesSchema = z
+  .unknown()
+  .refine((v) => !!v && typeof v === "object" && Object.keys(v).length <= MAX_OUTCOMES, "too many outcomes")
+  .pipe(z.record(z.string().max(100), z.enum(["again", "hard", "good"])));
 
 export async function recordAttemptAction(input: AttemptInput): Promise<void> {
   const user = await requireUser();
@@ -79,6 +85,11 @@ export async function completeTestAction(
   const user = await requireUser();
   const data = completeTestSchema.parse(input);
   if (!getUnit(data.unitId)) throw new Error("Unknown unit");
+  // Same rules as the test page: no tests for locked units, and the final
+  // test only once it is open.
+  const state = getRoadmap(user.id).find((r) => r.unit.id === data.unitId);
+  if (!state || state.state === "locked" || state.state === "planned") throw new Error("Unit is locked");
+  if (data.mode === "final" && !state.finalTestOpen) throw new Error("Final test is not open");
   const score = data.correct / data.total;
   const passed = testPassed(data.mode, score);
   recordTest(user.id, data.unitId, data.mode, score, passed);
