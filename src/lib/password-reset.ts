@@ -49,9 +49,21 @@ export function findValidToken(token: string) {
   );
 }
 
-/** Sets a new password with a valid token. Returns false if the token is not valid. */
+/**
+ * Sets a new password with a valid token. Returns false if the token is not valid.
+ *
+ * The token is claimed (marked used) in one conditional UPDATE before the
+ * password changes, so two simultaneous requests with the same link cannot
+ * both set a password: only the one whose UPDATE changed a row continues.
+ */
 export async function resetPasswordWithToken(token: string, newPassword: string): Promise<boolean> {
-  const row = findValidToken(token);
+  const t = schema.passwordResetTokens;
+  const row = db
+    .update(t)
+    .set({ usedAt: new Date() })
+    .where(and(eq(t.tokenHash, sha256(token)), isNull(t.usedAt), gt(t.expiresAt, new Date())))
+    .returning({ userId: t.userId })
+    .get();
   if (!row) return false;
   const ctx = await auth.$context;
   const hash = await ctx.password.hash(newPassword);
@@ -67,9 +79,5 @@ export async function resetPasswordWithToken(token: string, newPassword: string)
     });
   }
   await ctx.internalAdapter.deleteUserSessions(row.userId);
-  db.update(schema.passwordResetTokens)
-    .set({ usedAt: new Date() })
-    .where(eq(schema.passwordResetTokens.id, row.id))
-    .run();
   return true;
 }
