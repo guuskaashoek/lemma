@@ -37,8 +37,10 @@ export async function recordAttemptAction(input: AttemptInput): Promise<void> {
   const user = await requireUser();
   const a = attemptSchema.parse(input);
   // Every call adds a row. Far above honest use, but stops one account from
-  // filling the disk by calling the action in a loop.
+  // filling the disk by calling the action in a loop. Registration is open, so
+  // the total cap stops many fresh accounts from doing the same together.
   if (!hit(`attempt:user:${user.id}`, 1500, 60 * 60_000)) return;
+  if (!hit("attempt:all", 10_000, 60 * 60_000)) return;
   recordAttempt(user.id, {
     mode: a.mode,
     contextId: a.contextId,
