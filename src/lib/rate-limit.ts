@@ -6,22 +6,8 @@
  * counters live in SQLite, so they survive a restart.
  */
 import "server-only";
-import { isIP } from "node:net";
 import { eq, lt } from "drizzle-orm";
-import { headers } from "next/headers";
 import { db, schema } from "@/db";
-
-/**
- * Best-effort client IP (works behind a reverse proxy that sets the header).
- * The header is visitor-controlled, so anything that is not an IP address
- * collapses into one bucket instead of becoming a long, unique counter key.
- */
-export async function clientIp(): Promise<string> {
-  const h = await headers();
-  const ip = (h.get("x-forwarded-for")?.split(",")[0] || h.get("x-real-ip") || "").trim();
-  if (!ip) return "local";
-  return isIP(ip) ? ip : "invalid";
-}
 
 /**
  * Registers one hit for `key` and returns whether it is still allowed.
@@ -53,9 +39,8 @@ const MAX_WINDOW_MS = 60 * 60_000;
 let lastPrune = 0;
 
 /**
- * Deletes counters whose window is long over. Spoofed X-Forwarded-For values
- * and made-up e-mail addresses each create a row, so without this the table
- * grows without bound.
+ * Deletes counters whose window is long over. Made-up e-mail addresses each
+ * create a row, so without this the table grows without bound.
  */
 function pruneExpired(now = Date.now()) {
   if (now - lastPrune < 10 * 60_000) return;
@@ -63,26 +48,35 @@ function pruneExpired(now = Date.now()) {
   db.delete(schema.actionRateLimits).where(lt(schema.actionRateLimits.windowStart, now - MAX_WINDOW_MS)).run();
 }
 
-/** Limits per IP, per e-mail address and in total at once; all must allow the request. */
+/** True if the current window of `key` has no hits left. Writes nothing. */
+function isFull(key: string, max: number, windowMs: number): boolean {
+  const row = db.select().from(schema.actionRateLimits).where(eq(schema.actionRateLimits.key, key)).get();
+  return !!row && Date.now() - row.windowStart < windowMs && row.count >= max;
+}
+
+/**
+ * Limits per e-mail address and in total; both must allow the request.
+ *
+ * There is deliberately no per-IP limit. Behind GuusLab Jet every honest visitor
+ * arrives with the same proxy address and X-Forwarded-For can be forged, so an
+ * IP counter would be a lower shared limit for honest visitors, and a new row per
+ * request for anyone sending made-up addresses.
+ */
 export async function allowAuthAttempt(kind: "login" | "register" | "reset", email?: string): Promise<boolean> {
   pruneExpired();
-  const ip = await clientIp();
-  // Behind GuusLab Jet every honest request arrives with the same proxy address,
-  // but visitors can forge X-Forwarded-For and get a fresh "ip" bucket per
-  // request. The "all" bucket ignores the header, so it caps account creation
-  // and password spraying across many addresses no matter what is sent. Keep
-  // the caps high enough that one attacker cannot easily lock everybody out;
-  // the per-e-mail limit stops guessing one password.
+  // Keep the total caps high enough that one attacker cannot easily lock
+  // everybody out; the per-e-mail limit stops guessing one password.
   const rules = {
-    login: { ip: [100, 15 * 60_000], email: [5, 15 * 60_000], all: [300, 15 * 60_000] },
-    register: { ip: [20, 60 * 60_000], email: [3, 60 * 60_000], all: [30, 60 * 60_000] },
-    reset: { ip: [10, 15 * 60_000], email: [5, 15 * 60_000], all: [50, 15 * 60_000] },
+    login: { email: [5, 15 * 60_000], all: [300, 15 * 60_000] },
+    register: { email: [3, 60 * 60_000], all: [30, 60 * 60_000] },
+    reset: { email: [5, 15 * 60_000], all: [50, 15 * 60_000] },
   } as const;
   const r = rules[kind];
-  const ipOk = hit(`${kind}:ip:${ip}`, r.ip[0], r.ip[1]);
+  // Refused before anything is written: made-up addresses cannot add rows once
+  // the total is used up, so the table stays small however long a flood lasts.
+  if (isFull(`${kind}:all`, r.all[0], r.all[1])) return false;
   const emailOk = email ? hit(`${kind}:email:${email.toLowerCase()}`, r.email[0], r.email[1]) : true;
-  // Only requests that pass the other limits count towards the total, so one
+  // Only requests that pass the per-e-mail limit count towards the total, so one
   // hammered address cannot use up everybody's allowance.
-  const allOk = ipOk && emailOk ? hit(`${kind}:all`, r.all[0], r.all[1]) : true;
-  return ipOk && emailOk && allOk;
+  return emailOk && hit(`${kind}:all`, r.all[0], r.all[1]);
 }
