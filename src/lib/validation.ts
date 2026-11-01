@@ -63,23 +63,29 @@ export const attemptSchema = z.object({
 });
 export type AttemptInput = z.infer<typeof attemptSchema>;
 
-export const completeLessonSchema = z.object({
-  lessonId: id,
-  correctFirstTry: z.number().int().min(0).max(100),
-  total: z.number().int().min(1).max(100),
-  seconds: z.number().int().min(0).max(4 * 3600),
-});
+export const completeLessonSchema = z
+  .object({
+    lessonId: id,
+    correctFirstTry: z.number().int().min(0).max(100),
+    total: z.number().int().min(1).max(100),
+    seconds: z.number().int().min(0).max(4 * 3600),
+  })
+  .refine((d) => d.correctFirstTry <= d.total);
 
-export const completeTestSchema = z.object({
-  unitId: id,
-  mode: z.enum(["final", "testout"]),
-  correct: z.number().int().min(0).max(100),
-  total: z.number().int().min(1).max(100),
-  seconds: z.number().int().min(0).max(4 * 3600),
-});
+export const completeTestSchema = z
+  .object({
+    unitId: id,
+    mode: z.enum(["final", "testout"]),
+    correct: z.number().int().min(0).max(100),
+    total: z.number().int().min(1).max(100),
+    seconds: z.number().int().min(0).max(4 * 3600),
+  })
+  .refine((d) => d.correct <= d.total);
 
-export const completeReviewSchema = z.object({
-  correct: z.number().int().min(0).max(100),
-  total: z.number().int().min(1).max(100),
-  seconds: z.number().int().min(0).max(4 * 3600),
-});
+export const completeReviewSchema = z
+  .object({
+    correct: z.number().int().min(0).max(100),
+    total: z.number().int().min(1).max(100),
+    seconds: z.number().int().min(0).max(4 * 3600),
+  })
+  .refine((d) => d.correct <= d.total);
