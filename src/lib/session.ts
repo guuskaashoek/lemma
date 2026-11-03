@@ -9,7 +9,7 @@ import "server-only";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, lt, notInArray } from "drizzle-orm";
 import { auth } from "./auth";
 import { db, schema } from "@/db";
 
@@ -56,3 +56,27 @@ export const getSettings = cache(async (userId: string) => {
     null
   );
 });
+
+/** Most sessions one account keeps; a new login drops the oldest. */
+const MAX_SESSIONS = 20;
+
+/**
+ * Called after a successful login. Better Auth only removes an expired session
+ * when that browser comes back, so abandoned ones would stay forever, and every
+ * login adds a row.
+ */
+export function pruneSessions(userId: string): void {
+  const s = schema.session;
+  db.delete(s).where(lt(s.expiresAt, new Date())).run();
+  const keep = db
+    .select({ id: s.id })
+    .from(s)
+    .where(eq(s.userId, userId))
+    .orderBy(desc(s.createdAt))
+    .limit(MAX_SESSIONS)
+    .all()
+    .map((r) => r.id);
+  if (keep.length === MAX_SESSIONS) {
+    db.delete(s).where(and(eq(s.userId, userId), notInArray(s.id, keep))).run();
+  }
+}

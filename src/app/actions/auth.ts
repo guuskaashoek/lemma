@@ -13,6 +13,7 @@ import { auth } from "@/lib/auth";
 import { resetPasswordWithToken } from "@/lib/password-reset";
 import { getPrefs, setPrefsCookie } from "@/lib/prefs";
 import { allowAuthAttempt } from "@/lib/rate-limit";
+import { pruneSessions } from "@/lib/session";
 import { loginSchema, registerSchema, resetPasswordSchema } from "@/lib/validation";
 
 export type FormState = { error?: string; ok?: string } | undefined;
@@ -57,6 +58,7 @@ export async function loginAction(_prev: FormState, form: FormData): Promise<For
 
   try {
     const res = await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
+    pruneSessions(res.user.id);
     // Bring this browser's display preferences in line with the account.
     const settings = db.select().from(schema.userSettings).where(eq(schema.userSettings.userId, res.user.id)).get();
     if (settings) {

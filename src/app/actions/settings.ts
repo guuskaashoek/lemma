@@ -75,6 +75,8 @@ export async function deleteAccountAction(_prev: FormState, form: FormData): Pro
   const { t } = await getT();
   const password = String(form.get("password") ?? "");
   if (!(await allowAuthAttempt("login", user.email))) return { error: t("errTooMany") };
+  // Same bound as the login form: hashing a megabyte-long guess is wasted work.
+  if (password.length > 128) return { error: t("errInvalidLogin") };
 
   const ctx = await auth.$context;
   const account = await ctx.internalAdapter.findCredentialAccount(user.id);
