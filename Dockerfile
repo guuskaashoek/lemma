@@ -1,5 +1,7 @@
 # Lemma: one Next.js process with a SQLite database (better-sqlite3).
-FROM node:24-bookworm-slim AS build
+# Base image pinned by digest (Node 24.22.2, the runtime already live): a moved
+# tag cannot change what is built. Bump tag + digest together on a Node release.
+FROM node:24.22.2-bookworm-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9 AS build
 WORKDIR /app
 # Toolchain in case better-sqlite3 has no prebuilt binary for this platform.
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
@@ -10,7 +12,7 @@ RUN npm ci
 COPY . .
 RUN npm run build && npm prune --omit=dev
 
-FROM node:24-bookworm-slim
+FROM node:24.22.2-bookworm-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 DATABASE_PATH=/app/data/lemma.db
 COPY --from=build --chown=node:node /app /app
