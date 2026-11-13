@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
   // better-sqlite3 is a native module and must not be bundled.
   serverExternalPackages: ["better-sqlite3"],
   poweredByHeader: false,
+  // Lemma never uses next/image, so the optimizer is switched off: /_next/image
+  // then answers 404 instead of letting anonymous visitors run sharp resizes
+  // (and keeps its SVG handling, GHSA-7qx7-33qx-rqx2, out of reach).
+  images: { unoptimized: true },
   async headers() {
     return [
       {

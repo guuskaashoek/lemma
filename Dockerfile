@@ -1,5 +1,5 @@
 # Lemma: one Next.js process with a SQLite database (better-sqlite3).
-# Base image pinned by digest (Node 24.22.2, the runtime already live): a moved
+# Base image pinned by digest (Node 24.22.3): a moved
 # tag cannot change what is built. Bump tag + digest together on a Node release.
 FROM node:24.22.3-bookworm-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS build
 WORKDIR /app
