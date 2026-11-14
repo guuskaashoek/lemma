@@ -10,7 +10,7 @@ import { isAPIError } from "better-auth/api";
 import { db, schema } from "@/db";
 import { getT } from "@/i18n/server";
 import { auth } from "@/lib/auth";
-import { resetPasswordWithToken } from "@/lib/password-reset";
+import { findValidToken, resetPasswordWithToken } from "@/lib/password-reset";
 import { getPrefs, setPrefsCookie } from "@/lib/prefs";
 import { allowAuthAttempt } from "@/lib/rate-limit";
 import { pruneSessions } from "@/lib/session";
@@ -90,6 +90,11 @@ export async function resetPasswordAction(_prev: FormState, form: FormData): Pro
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.path[0] === "password" ? t("errPasswordShort") : t("resetInvalid") };
   }
+  // A link that does not exist is refused before the limiter counts anything.
+  // The token is 256 random bits, so guessing needs no limit, while counting
+  // made-up tokens let anyone use up the shared allowance and block every real
+  // reset for as long as they kept posting.
+  if (!findValidToken(parsed.data.token)) return { error: t("resetInvalid") };
   if (!(await allowAuthAttempt("reset"))) return { error: t("errTooMany") };
   const ok = await resetPasswordWithToken(parsed.data.token, parsed.data.password);
   return ok ? { ok: t("resetDone") } : { error: t("resetInvalid") };
